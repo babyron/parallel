@@ -98,17 +98,17 @@ void log_main_master()
 
 	t_sub_cluster_list = sub_cluster_list;
 	group_num = 0;
-	while(t_sub_cluster_list!=NULL)
+	while(t_sub_cluster_list != NULL)
 	{
 		group_num ++;
 		t_sub_cluster_list = t_sub_cluster_list->next;
 	}
 
-	group_machine_num_array = (int *)malloc(group_num*sizeof(int));
+	group_machine_num_array = (int *)malloc(group_num * sizeof(int));
 
 	t_sub_cluster_list = sub_cluster_list;
 	i = 0;
-	while(t_sub_cluster_list!=NULL)
+	while(t_sub_cluster_list != NULL)
 	{
 		group_machine_num_array[i] = t_sub_cluster_list->sub_machine_num;
 		t_sub_cluster_list = t_sub_cluster_list->next;
@@ -121,7 +121,7 @@ void log_main_master()
 	free_machine_num = 0;
 	unavailable_machine_num = 0;
 	in_group_machine_num = 0;
-	for(i=0;i<master_machine_num;i++)
+	for(i = 0; i < master_machine_num; i++)
 	{
 		if(master_machine_array[i].machine_status==1)
 		{
@@ -146,9 +146,9 @@ void log_main_master()
 	fprintf(fp,"MAIN_MASTER\n");
 	fprintf(fp,"%ld$%d$%d$%d$%d$%d\n",time(NULL),job_num,group_num,free_machine_num,in_group_machine_num,unavailable_machine_num);
 
-	for(i=0;i<group_num;i++)
+	for(i = 0; i < group_num; i++)
 	{
-		fprintf(fp,"%d,",group_machine_num_array[i]);
+		fprintf(fp, "%d,", group_machine_num_array[i]);
 	}
 	fprintf(fp,"$\n");
 

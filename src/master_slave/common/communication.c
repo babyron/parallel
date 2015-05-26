@@ -10,14 +10,91 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mpi.h>
-#include "../structure/data.h"
 #include "api.h"
+#include "communication.h"
 
 //size_t advanced_write(int fd,void *buf,size_t count);
 //size_t advanced_read(int fd,void *buf,size_t count,msg_t msg_type);
-void fill_msg_type(msg_t type,char *type_c);
+static void fill_msg_type(msg_t type, char *type_c);
+static int get_a_tag();
 //void fd_set_nonblocking(int fd);
-int get_a_tag();
+
+/**
+ * 用于填充完整的的消息类型
+ */
+static void fill_msg_type(msg_t type,char *type_c)
+{
+	switch(type)
+	{
+		case SUB_CLUSTER_HEART_BEAT:
+			strcpy(type_c,"TYPE:SUB_CLUSTER_HEART_BEAT;");
+			break;
+		case JOB_SUBMIT:
+			strcpy(type_c,"TYPE:JOB_SUBMIT;");
+			break;
+		case SCHEDULE_UNIT_ASSIGN:
+			strcpy(type_c,"TYPE:SCHEDULE_UNIT_ASSIGN;");
+			break;
+		case SCHEDULE_UNIT_FINISH:
+			strcpy(type_c,"TYPE:SCHEDULE_UNIT_FINISH;");
+			break;
+		case SUB_SCHEDULER_ASSIGN:
+			strcpy(type_c,"TYPE:SUB_SCHEDULER_ASSIGN;");
+			break;
+		case COMPUTATION_NODE_ASSIGN:
+			strcpy(type_c,"TYPE:COMPUTATION_NODE_ASSIGN;");
+			break;
+		case SUB_TASK_ASSIGN:
+			strcpy(type_c,"TYPE:SUB_TASK_ASSIGN;");
+			break;
+		case MACHINE_HEART_BEAT:
+			strcpy(type_c,"TYPE:MACHINE_HEART_BEAT;");
+			break;
+		case SUB_TASK_FINISH:
+			strcpy(type_c,"TYPE:SUB_TASK_FINISH;");
+			break;
+		case REGISTRATION_M:
+			strcpy(type_c,"TYPE:REGISTRATION_M;");
+			break;
+		case REGISTRATION_S:
+			strcpy(type_c,"TYPE:REGISTRATION_S;");
+			break;
+		case CHILD_CREATE:
+			strcpy(type_c,"TYPE:CHILD_CREATE;");
+			break;
+		case CHILD_WAIT_ALL:
+			strcpy(type_c,"TYPE:CHILD_WAIT_ALL;");
+			break;
+		case CHILD_WAKE_UP_ALL:
+			strcpy(type_c,"TYPE:CHILD_WAKE_UP_ALL;");
+			break;
+		case GET_SUB_TASK_IP:
+			strcpy(type_c,"TYPE:GET_SUB_TASK_IP;");
+			break;
+		case SUB_CLUSTER_DESTROY:
+			strcpy(type_c,"TYPE:SUB_CLUSTER_DESTROY;");
+			break;
+		case BACK_TO_MAIN_MASTER:
+			strcpy(type_c,"TYPE:BACK_TO_MAIN_MASTER;");
+			break;
+		case SUB_CLUSTER_SHUT_DOWN:
+			strcpy(type_c,"TYPE:SUB_CLUSTER_SHUT_DOWN;");
+			break;
+		default:
+			printf("fill_msg_type:unknown msg type!\n");
+			log_error("fill_msg_type:unknown msg type!\n");
+			exit(1);
+	}
+}
+
+static int get_a_tag()
+{
+	pthread_mutex_lock(&t_tag_m_lock);
+	t_tag = (t_tag + 1) % 49999;
+	pthread_mutex_unlock(&t_tag_m_lock);
+
+	return t_tag + 100;
+}
 
 /**
  * 进程通信函数，用于给指定的目的地传输消息并接受该消息源回传的信号
@@ -85,15 +162,6 @@ void send_recv_msg(int comm_source, int init_tag, msg_t msg_type, char *send_msg
 	free(ret_msg);
 }
 
-int get_a_tag()
-{
-	pthread_mutex_lock(&t_tag_m_lock);
-	t_tag = (t_tag+1)%49999;
-	pthread_mutex_unlock(&t_tag_m_lock);
-
-	return t_tag+100;
-}
-
 /*
 void advanced_send(int socket_fd,char *msg)
 {
@@ -116,74 +184,6 @@ void advanced_recv(int socket_fd,char **msg,msg_t msg_type)
 	advanced_read(socket_fd,*msg,msg_len,msg_type);
 }
 */
-
-/**
- * 用于填充完整的的消息类型
- */
-void fill_msg_type(msg_t type,char *type_c)
-{
-	switch(type)
-	{
-		case SUB_CLUSTER_HEART_BEAT:
-			strcpy(type_c,"TYPE:SUB_CLUSTER_HEART_BEAT;");
-			break;
-		case JOB_SUBMIT:
-			strcpy(type_c,"TYPE:JOB_SUBMIT;");
-			break;
-		case SCHEDULE_UNIT_ASSIGN:
-			strcpy(type_c,"TYPE:SCHEDULE_UNIT_ASSIGN;");
-			break;
-		case SCHEDULE_UNIT_FINISH:
-			strcpy(type_c,"TYPE:SCHEDULE_UNIT_FINISH;");
-			break;
-		case SUB_SCHEDULER_ASSIGN:
-			strcpy(type_c,"TYPE:SUB_SCHEDULER_ASSIGN;");
-			break;
-		case COMPUTATION_NODE_ASSIGN:
-			strcpy(type_c,"TYPE:COMPUTATION_NODE_ASSIGN;");
-			break;
-		case SUB_TASK_ASSIGN:
-			strcpy(type_c,"TYPE:SUB_TASK_ASSIGN;");
-			break;
-		case MACHINE_HEART_BEAT:
-			strcpy(type_c,"TYPE:MACHINE_HEART_BEAT;");
-			break;
-		case SUB_TASK_FINISH:
-			strcpy(type_c,"TYPE:SUB_TASK_FINISH;");
-			break;
-		case REGISTRATION_M:
-			strcpy(type_c,"TYPE:REGISTRATION_M;");
-			break;
-		case REGISTRATION_S:
-			strcpy(type_c,"TYPE:REGISTRATION_S;");
-			break;
-		case CHILD_CREATE:
-			strcpy(type_c,"TYPE:CHILD_CREATE;");
-			break;
-		case CHILD_WAIT_ALL:
-			strcpy(type_c,"TYPE:CHILD_WAIT_ALL;");
-			break;
-		case CHILD_WAKE_UP_ALL:
-			strcpy(type_c,"TYPE:CHILD_WAKE_UP_ALL;");
-			break;
-		case GET_SUB_TASK_IP:
-			strcpy(type_c,"TYPE:GET_SUB_TASK_IP;");
-			break;
-		case SUB_CLUSTER_DESTROY:
-			strcpy(type_c,"TYPE:SUB_CLUSTER_DESTROY;");
-			break;
-		case BACK_TO_MAIN_MASTER:
-			strcpy(type_c,"TYPE:BACK_TO_MAIN_MASTER;");
-			break;
-		case SUB_CLUSTER_SHUT_DOWN:
-			strcpy(type_c,"TYPE:SUB_CLUSTER_SHUT_DOWN;");
-			break;
-		default:
-			printf("fill_msg_type:unknown msg type!\n");
-			log_error("fill_msg_type:unknown msg type!\n");
-			exit(1);
-	}
-}
 
 void send_ack_msg(int comm_source,int ack_tag,char *ret)
 {
