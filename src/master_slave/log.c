@@ -32,12 +32,11 @@ void log_after_start_up()
 void log_record_start_up()
 {
 	FILE *fp;
-	char *id_c;
+	char id_c[6];
 
 	strcpy(file_path,"./log/log.");
-	id_c = itoa(global_machine_id);
+	itoa(id_c, global_machine_id);
 	strcat(file_path, id_c);
-	free(id_c);
 
 	fp = fopen(file_path,"w");
 

@@ -12,6 +12,7 @@
 #include "signal.h"
 #include "sys/msg.h"
 #include "../common/api.h"
+#include "mpi_pframe.h"
 
 int API_o_mpisub_task_finish(char *arg[],char *ret_msg);
 int API_o_mpichild_create(char *arg[],int child_num,char*child_arg[]);
@@ -24,7 +25,7 @@ int API_o_mpi_child_wait_all(char *arg[],int child_num,char ***child_arg);
 int API_o_mpi_child_create(char *arg[],int child_num,char*child_arg[]);
 int is_to_me(char *msg,char **arg);
 
-char *itoa(int num);
+//char *itoa(int num);
 void sigusr1_handler(int signo);
 long int get_msg_type(char **arg);
 
@@ -495,7 +496,7 @@ int API_o_mpi_child_create(char *arg[],int child_num,char*child_arg[])
 
 	return 1;
 }
-
+/*
 char *itoa(int num)
 {
 	char *num_c;
@@ -536,6 +537,7 @@ char *itoa(int num)
 
 	return num_c;
 }
+*/
 
 /*
 int API_o_get_parent_ip(char *arg[],char *ip)

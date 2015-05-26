@@ -357,7 +357,7 @@ void o_mpi_child_wait_all_handler(char *arg)
 	struct child_wait_all_list_element t_child_wait_all_list;
 	struct child_wait_all_list_element *t;
 	char *t_arg,*tt_arg;
-	char *machine_id_c;
+	char machine_id_c[6];
 	char *parameter;
 	char *save_ptr;
 	int len;
@@ -412,14 +412,13 @@ void o_mpi_child_wait_all_handler(char *arg)
 	tt_arg[i] = '\0';
 
 	strcat(tt_arg,",");
-	machine_id_c = itoa(sub_machine_id);
-	strcat(tt_arg,machine_id_c);
+	itoa(machine_id_c, sub_machine_id);
+	strcat(tt_arg, machine_id_c);
 
 	API_child_wait_all_c_to_s(tt_arg);
 
 	free(t_arg);
 	free(tt_arg);
-	free(machine_id_c);
 }
 
 /*

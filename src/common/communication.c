@@ -34,7 +34,7 @@ void send_recv_msg(int comm_source, int init_tag, msg_t msg_type, char *send_msg
 	char final_msg[strlen(send_msg)+50];
 	char *ret_msg;
 	char msg_type_c[32];
-	char *parameter;
+	char parameter[6];
 	time_t start,finish;
 	int comm_tag;
 	int ack_tag;
@@ -54,23 +54,20 @@ void send_recv_msg(int comm_source, int init_tag, msg_t msg_type, char *send_msg
 	fill_msg_type(msg_type,msg_type_c);
 
 	comm_tag = get_a_tag();
-	parameter = itoa(comm_tag);
+	itoa(parameter, comm_tag);
 	strcpy(pre_msg,parameter);
-	free(parameter);
 
 	strcat(pre_msg,";");
 
 	length = strlen(send_msg) + strlen(msg_type_c) + 1;
-	parameter = itoa(length);
+	itoa(parameter, length);
 	strcat(pre_msg, parameter);
-	free(parameter);
 
 	strcat(pre_msg, ";");
 
 	ack_tag = get_a_tag();
-	parameter = itoa(ack_tag);
+	itoa(parameter, ack_tag);
 	strcat(pre_msg, parameter);
-	free(parameter);
 	//每次发送之前都要预先通知发送的类型以及发送数据的长度
 	MPI_Send(pre_msg, strlen(pre_msg) + 1, MPI_CHAR, comm_source, init_tag, MPI_COMM_WORLD);
 

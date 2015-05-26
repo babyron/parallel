@@ -369,7 +369,7 @@ void child_wait_all_c_to_s_handler(int comm_source,int ack_tag,char *arg)
 	struct child_wait_all_list_element *t;
 	char *t_arg,*tt_arg;
 	char *parameter;
-	char *sub_cluster_id_c;
+	char sub_cluster_id_c[6];
 	char *save_ptr;
 	int len;
 	int i;
@@ -423,14 +423,13 @@ void child_wait_all_c_to_s_handler(int comm_source,int ack_tag,char *arg)
 	tt_arg[i] = '\0';
 
 	strcat(tt_arg,",");
-	sub_cluster_id_c = itoa(sub_cluster_id);
+	itoa(sub_cluster_id_c, sub_cluster_id);
 	strcat(tt_arg,sub_cluster_id_c);
 
 	API_child_wait_all_s_to_m(tt_arg);
 
 	free(t_arg);
 	free(tt_arg);
-	free(sub_cluster_id_c);
 }
 
 void child_create_c_to_s_handler(int comm_source,int ack_tag,char *arg)
@@ -604,11 +603,10 @@ void registration_s_handler(int comm_source,int ack_tag,char *arg)
 	printf("registration s  = %s!\n",t_arg);
 
 	machine_id = sub_find_machine_id(comm_source);
-	machine_id_c = itoa(machine_id);
+	itoa(machine_id_c, machine_id);
 
-	send_ack_msg(comm_source,ack_tag,machine_id_c);
+	send_ack_msg(comm_source,ack_tag, machine_id_c);
 
-	free(machine_id_c);
 
 	parameter = strtok_r(t_arg,",",&save_ptr);
 	sub_machine_array[machine_id-1].machine_description.CPU_core_num = atoi(parameter);
