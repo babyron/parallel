@@ -1,20 +1,21 @@
-#include "stdio.h"
-#include "unistd.h"
-#include "pthread.h"
-#include "sys/socket.h"
-#include "sys/msg.h"
-#include "sys/ipc.h"
-#include "sys/types.h"
-#include "arpa/inet.h"
-#include "strings.h"
-#include "stdlib.h"
-#include "string.h"
-#include "../data.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <sys/msg.h>
+#include <sys/ipc.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include <mpi.h>
+#include "./structure/data.h"
 #include "data_computation.h"
-#include "../common/api.h"
-#include "../common/communication.h"
-#include "assert.h"
-#include "mpi.h"
+#include "./common/api.h"
+#include "./common/communication.h"
+
 
 msg_t msg_type_computation(char *msg);
 void sub_scheduler_assign_handler(int comm_source,int ack_tag,char *arg);
@@ -23,13 +24,13 @@ void *sub_scheduler_server(void *arg);
 void sub_task_assign_handler(int comm_source,int ack_tag,char *arg);
 void sub_scheduler_init();
 void run_sub_task(char *t_arg);
-void o_sub_task_finish_handler(int comm_source,int ack_tag,char *arg);
-void o_child_create_handler(int comm_source,int ack_tag,char *arg);
-void o_child_wait_all_handler(int comm_source,int ack_tag,char *arg);
+//void o_sub_task_finish_handler(int comm_source,int ack_tag,char *arg);
+//void o_child_create_handler(int comm_source,int ack_tag,char *arg);
+//void o_child_wait_all_handler(int comm_source,int ack_tag,char *arg);
 void child_wake_up_all_handler(int comm_source,int ack_tag,char *arg);
 void add_element_to_sub_task_running_list(char *arg);
 void delete_element_from_sub_task_running_list(char *arg);
-void o_get_sub_task_handler(int comm_source,int ack_tag,char *arg);
+//void o_get_sub_task_handler(int comm_source,int ack_tag,char *arg);
 void back_to_main_master_handler(int comm_source,int ack_tag,char *arg);
 void o_mpi_sub_task_finish_handler(char *arg);
 void o_mpi_child_create_handler(char *arg);

@@ -1,13 +1,13 @@
-﻿#include "stdio.h"
-#include "unistd.h"
-#include "pthread.h"
-#include "sys/socket.h"
-#include "arpa/inet.h"
-#include "strings.h"
-#include "stdlib.h"
-#include "string.h"
-#include "../data.h"
-#include "../common/api.h"
+﻿#include <stdio.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <string.h>
+#include "./structure/data.h"
+#include "./common/api.h"
 #include "assert.h"
 
 int **DAG;

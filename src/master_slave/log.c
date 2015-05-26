@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../common/api.h"
+#include "./common/api.h"
 #include "data_computation.h"
 
 time_t start_up_start_time;

@@ -1,15 +1,15 @@
-#include "stdio.h"
-#include "unistd.h"
-#include "pthread.h"
-#include "sys/socket.h"
-#include "arpa/inet.h"
-#include "strings.h"
-#include "stdlib.h"
-#include "string.h"
-#include "../data.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include "./structure/data.h"
 #include "data_computation.h"
-#include "../common/api.h"
-#include "assert.h"
+#include "./common/api.h"
 
 msg_t msg_type_sub_scheduler(char *msg);
 void schedule_unit_assign_handler(int comm_source,int ack_tag,char *arg);

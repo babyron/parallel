@@ -1,14 +1,14 @@
-#include "stdio.h"
-#include "unistd.h"
-#include "pthread.h"
-#include "sys/socket.h"
-#include "arpa/inet.h"
-#include "strings.h"
-#include "stdlib.h"
-#include "string.h"
-#include "../data.h"
-#include "../common/api.h"
-#include "assert.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include <pthread.h>
+#include "./structure/data.h"
+#include "./common/api.h"
 
 msg_t msg_type(char *msg);
 void sub_cluster_heart_beat_handler(int comm_source,int ack_tag,char *arg);

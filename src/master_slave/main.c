@@ -1,21 +1,21 @@
 ﻿#define _GNU_SOURCE
 
-#include "stdio.h"
-#include "unistd.h"
-#include "pthread.h"
-#include "sys/socket.h"
-#include "arpa/inet.h"
-#include "strings.h"
-#include "stdlib.h"
-#include "string.h"
-#include "../data.h"
-#include "../common/api.h"
-#include "../common/debug.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/msg.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <mpi.h>
+#include "./structure/data.h"
+#include "./common/api.h"
+#include "./common/debug.h"
 #include "data_computation.h"
-#include "sys/msg.h"
-#include "sys/types.h"
-#include "errno.h"
-#include "mpi.h"
 #include "log.h"
 
 void master_init();
@@ -23,7 +23,7 @@ void *master_server(void *null_arg);
 void *master_scheduler(void *arg);
 void sub_cluster_init();
 extern void *master_server_handler(void *arg);
-extern void *load_generater(void *);
+//extern void *load_generater(void *);
 extern void *local_msg_daemon(void *arg);
 
 void *computation_server(void *arg);

@@ -1,22 +1,22 @@
-#include "stdio.h"
-#include "unistd.h"
-#include "pthread.h"
-#include "sys/socket.h"
-#include "arpa/inet.h"
-#include "strings.h"
-#include "stdlib.h"
-#include "string.h"
-#include "../data.h"
-#include "poll.h"
-#include "fcntl.h"
-#include "assert.h"
+#include <poll.h>
+#include <fcntl.h>
+#include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <string.h>
+#include <mpi.h>
+#include "../structure/data.h"
 #include "api.h"
-#include "mpi.h"
 
-size_t advanced_write(int fd,void *buf,size_t count);
-size_t advanced_read(int fd,void *buf,size_t count,msg_t msg_type);
+//size_t advanced_write(int fd,void *buf,size_t count);
+//size_t advanced_read(int fd,void *buf,size_t count,msg_t msg_type);
 void fill_msg_type(msg_t type,char *type_c);
-void fd_set_nonblocking(int fd);
+//void fd_set_nonblocking(int fd);
 int get_a_tag();
 
 /**

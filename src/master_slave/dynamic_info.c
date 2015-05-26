@@ -1,14 +1,14 @@
 #define _GNU_SOURCE
 
-#include "stdio.h"
-#include "unistd.h"
-#include "stdlib.h"
-#include "string.h"
-#include "sys/time.h"
-#include "../data.h"
-#include "../common/api.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
+#include <pthread.h>
+#include "./structure/data.h"
+#include "./common/api.h"
 #include "data_computation.h"
-#include "pthread.h"
 
 int version;	//0: my machine  red hat
 
