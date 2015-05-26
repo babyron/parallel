@@ -1,0 +1,4 @@
+./log/log.0,vfork error!
+
+./log/log.0,msgrecv error! local_msg_daemon
+

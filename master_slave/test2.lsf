@@ -1,0 +1,11 @@
+#!/bin/sh
+APP_NAME=score
+NP=2
+NP_PER_NODE=2
+RUN="RAW"
+
+rm -f hosts.list
+for i in `echo $LSB_HOSTS`; do
+echo $i >>hosts.list
+done
+/home/compiler/mpi/mvapich/1.0/icc.ifort-9.1/bin/mpirun -np 2 -hostfile ./hosts.list /home/users/simmykq/users/zhengyuan/mpi_parallel_framework/master_slave/exe_framework
