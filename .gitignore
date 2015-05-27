@@ -1,8 +1,7 @@
 .cproject
 .project
-.gitignore
 ./src/master_slave/exe_framework
-./src/master_slave/log/
+./src/master_slave/log/*.*
 
 # Object files
 *.o
