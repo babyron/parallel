@@ -244,10 +244,10 @@ struct machine_description_element
 {
 	int CPU_core_num;
 	int GPU_core_num;
-	int CPU_free;		//10000 average of all cores
-	int GPU_load;		//10000
-	int memory_free;	//mB
-	int network_free;	//mb
+	int CPU_free;		// 10000 average of all cores
+	int GPU_load;		// 10000
+	int memory_free;	// mB
+	int network_free;	// mb
 	int IO_bus_capacity;
 	int network_capacity;
 	int memory_total;	//10mB
@@ -260,7 +260,7 @@ struct machine_status_array_element
 	int comm_id;
 	int sub_master_id;
 	struct machine_description_element machine_description;
-	int machine_status;	//0:unavailable 1:available not in cluster 2.in sub cluster
+	int machine_status;	 //0:unavailable 1:available not in cluster 2.in sub cluster
 	time_t last_heart_beat_time;
 };
 
@@ -467,8 +467,6 @@ int t_sub_cluster_id;
 struct machine_status_array_element *master_machine_array;//used to store each machine's status
 int master_machine_num;
 
-int t_tag;
-
 struct job_description_element *pre_job_list;//预备要执行的作业，直接从文件中接受作业信息
 struct job_description_element *running_job_list;//已经准备要运行的作业
 //预备要执行的作业与运行中的作业有区别，由于有多个作业，running_job_list会把预备作业加入，并将该作业
@@ -487,7 +485,7 @@ pthread_mutex_t child_wait_all_list_m_m_lock;
 pthread_mutex_t debug_m_lock;
 pthread_mutex_t sub_cluster_list_m_lock;
 pthread_mutex_t master_machine_array_m_lock;
-pthread_mutex_t t_tag_m_lock;
+//pthread_mutex_t t_tag_m_lock;
 pthread_mutex_t local_machine_role_m_lock;
 pthread_mutex_t running_job_num_m_lock;
 pthread_mutex_t log_m_lock;

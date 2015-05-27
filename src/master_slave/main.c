@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	global_machine_id = id;//设定主机id
-	pthread_mutex_init(&t_tag_m_lock, NULL);//初始化
+	//pthread_mutex_init(&t_tag_m_lock, NULL);//初始化
 
 	if (id == 0) {
 		master_init();
@@ -180,7 +180,7 @@ void * master_server(void * null_arg) {
 	while (1) {
 		//循环接收slave节点所发出的消息
 		MPI_Recv(arg, 20, MPI_CHAR, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
-
+		//printf("master receive msg === %s\n", arg);
 		server_arg = (struct server_arg_element *) malloc(sizeof(struct server_arg_element));
 		server_arg->msg = strdup(arg);
 		server_arg->status = status;

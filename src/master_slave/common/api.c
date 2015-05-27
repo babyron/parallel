@@ -13,10 +13,10 @@
 #include "communication.h"
 #include "api.h"
 #include "../data_computation.h"
+#include "../structure/type_size.h"
 
-//void master_get_machine_ip(int machine_id,char *ip);
-
-//void sub_get_machine_ip(int machine_id,char *ip);
+//void master_get_machine_ip(int machine_id, char *ip);
+//void sub_get_machine_ip(int machine_id, char *ip);
 
 /*======================private function====================*/
 static void copy_int_to_msg(char *msg, char *t_msg, int num, char *append);
@@ -29,7 +29,7 @@ static void copy_int_to_msg(char *msg, char *t_msg, int num, char *append){
 
 void fill_schedule_unit_assign_msg(struct schedule_unit_description_element schedule_unit,char *send_msg,int num,char *priority_modified_msg)
 {
-	char t_msg[6];
+	char t_msg[6] = {0};
 	int i, j;
 	char *append = ",";
 
@@ -164,7 +164,7 @@ struct child_wait_all_list_element *find_element_in_child_wait_all_list_s(int ty
 //		printf("list: type = %d, job_id = %d top_id = %d ids:%2d,%2d,%2d\n",t_child_wait_all_list_s->type,t_child_wait_all_list_s->job_id,t_child_wait_all_list_s->top_id,t_child_wait_all_list_s->id[0],t_child_wait_all_list_s->id[1],t_child_wait_all_list_s->id[2]);
 		if((t_child_wait_all_list_s->type==type)&&(t_child_wait_all_list_s->job_id==job_id))
 		{
-			if(type==0)
+			if(type == 0)
 			{
 				if(t_child_wait_all_list_s->top_id==top_id)
 				{
@@ -203,7 +203,7 @@ struct child_wait_all_list_element *find_element_in_child_wait_all_list_c(int ty
 	t_child_wait_all_list_c = child_wait_all_list_c;
 	while(t_child_wait_all_list_c!=NULL)
 	{
-		if((t_child_wait_all_list_c->type==type)&&(t_child_wait_all_list_c->job_id==job_id))
+		if((t_child_wait_all_list_c->type == type)&&(t_child_wait_all_list_c->job_id==job_id))
 		{
 			if(type==0)
 			{
@@ -301,7 +301,7 @@ void check_modified_priority(struct sub_cluster_status_list_element *list,int *n
 	struct schedule_unit_priority_list_element *t;
 	int new_priority;
 	int old_len;
-	char tt[50];
+	char tt[50] = {0};
 
 	(*num) = 0;
 
@@ -962,10 +962,11 @@ int API_machine_heart_beat()
 {
 	//TODO I don't know why send_msg[24] would bug, override by other variable memory?
 	//char send_msg[24];
-	char *send_msg = (char *)malloc(24);
 	char *ret_msg;
-	char t_arg[6];
+	char t_arg[6] = {0};
 	char *append = ",";
+	//Uninitialized send_msg may cause bug because strcat start target start with null
+	char send_msg[24] = {0};
 
 	//copy_int_to_msg(send_msg, t_arg, 5643, append);
 	copy_int_to_msg(send_msg, t_arg, local_machine_status.CPU_free, append);
@@ -981,6 +982,7 @@ int API_machine_heart_beat()
 			log_error("sub_master_comm_id==0\n");
 			exit(1);
 		}
+
 		send_recv_msg(sub_master_comm_id, 1, MACHINE_HEART_BEAT, send_msg, &ret_msg);//sub_master_id属于什么变量？？
 		free(ret_msg);
 	}
@@ -995,7 +997,6 @@ int API_machine_heart_beat()
 		log_error("machine heart bear unknow role!!!\n");
 		exit(1);
 	}
-	free(send_msg);
 	return 1;
 }
 
@@ -1013,22 +1014,20 @@ int API_sub_cluster_heart_beat()
 		return 0;
 	}
 
-	send_msg = (char *)malloc(6 + sub_machine_num * 25 + 1);
+	//why is 6 ?
+	send_msg = (char *)malloc(6 + sub_machine_num * (INT_SIZE + 1) * 5 + 1);
 
 	copy_int_to_msg(send_msg, t_arg, sub_machine_num, ",");
 
 	for(i = 0; i < sub_machine_num; i++)
 	{
-
-		itoa(t_arg, sub_machine_array[i].machine_description.CPU_free);
 		if(sub_machine_array[i].machine_description.CPU_free == 0)
 		{
 			printf("send is 0\n");
 			log_error("send is 0\n");
 			exit(1);
 		}
-		strcat(send_msg, t_arg);
-		strcat(send_msg, "_");
+		copy_int_to_msg(send_msg, t_arg, sub_machine_array[i].machine_description.CPU_free, "_");
 
 		copy_int_to_msg(send_msg, t_arg, sub_machine_array[i].machine_description.GPU_load, append);
 		copy_int_to_msg(send_msg, t_arg, sub_machine_array[i].machine_description.memory_free, append);
@@ -1036,6 +1035,7 @@ int API_sub_cluster_heart_beat()
 	}
 
 	send_recv_msg(0, 0, SUB_CLUSTER_HEART_BEAT, send_msg, &ret_msg);
+	//should test if ret_msg is NULL
 	free(ret_msg);
 	free(send_msg);
 	return 1;
@@ -1318,6 +1318,7 @@ void itoa(char *num_c, int num)
 	}
 	char t[6];
 	int i;
+	int index = 0;
 
 	if(num > 65536 || num < 0)
 	{
@@ -1328,11 +1329,9 @@ void itoa(char *num_c, int num)
 
 	if(num == 0)
 	{
-		num_c[0] = '0';
-		num_c[1] = '\0';
+		num_c[index++] = '0';
 	}
 
-	int index = 0;
 	while(num > 0)
 	{
 		t[index] = num % 10 + '0';

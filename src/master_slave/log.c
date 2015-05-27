@@ -5,7 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "./common/api.h"
+//#include "./common/api.h"
+#include "./structure/data.h"
 #include "data_computation.h"
 
 time_t start_up_start_time;
@@ -47,31 +48,31 @@ void log_record_start_up()
 	fclose(fp);
 }
 
-void log_API(char *msg,msg_t type,time_t start,time_t finish)
+void log_API(char *msg, msg_t type, time_t start, time_t finish)
 {
 	FILE *fp;
 	int is_record_msg;
 
 	is_record_msg = 1;
 
-	if(type==MACHINE_HEART_BEAT||type==SUB_CLUSTER_HEART_BEAT)
+	if(type == MACHINE_HEART_BEAT || type == SUB_CLUSTER_HEART_BEAT)
 	{
 		return;
 	}
 
 	pthread_mutex_lock(&log_m_lock);
 
-	fp = fopen(file_path,"a");
+	fp = fopen(file_path, "a");
 
-	fprintf(fp,"%s\n","API\n");
+	fprintf(fp, "%s\n", "API\n");
 
-	if(is_record_msg==1)
+	if(is_record_msg == 1)
 	{
-		fprintf(fp,"%ld$%ld$%d$%d$%d$%s\n",start,finish,global_machine_id,local_machine_role,sub_master_comm_id,msg);
+		fprintf(fp, "%ld$%ld$%d$%d$%d$%s\n", start, finish, global_machine_id, local_machine_role, sub_master_comm_id, msg);
 	}
 	else
 	{
-		fprintf(fp,"%ld$%ld$%d$%d$%d$%s\n",start,finish,global_machine_id,local_machine_role,sub_master_comm_id,"NULL");
+		fprintf(fp, "%ld$%ld$%d$%d$%d$%s\n", start, finish, global_machine_id, local_machine_role, sub_master_comm_id, "NULL");
 	}
 
 	fclose(fp);

@@ -45,14 +45,15 @@ void *sub_cluster_heart_beat_daemon(void *arg)
 	return NULL;
 }
 
+//send heart beat info
 void send_sub_cluster_heart_beat()
 {
 	static int is_first;
 
-	if(is_first==0)
+	if(is_first == 0)
 	{
 		API_sub_cluster_heart_beat();
-		gettimeofday(&last_sub_cluster_heart_beat_time,NULL);
+		gettimeofday(&last_sub_cluster_heart_beat_time, NULL);
 		is_first = 1;
 	}
 	else
@@ -60,7 +61,7 @@ void send_sub_cluster_heart_beat()
 		if(can_send_sub_cluster_heart_beat())
 		{
 			API_sub_cluster_heart_beat();
-			gettimeofday(&last_sub_cluster_heart_beat_time,NULL);
+			gettimeofday(&last_sub_cluster_heart_beat_time, NULL);
 		}
 	}
 }

@@ -49,7 +49,7 @@ int is_job_finished(struct job_description_element *t);
 void *master_server_handler(void * arg)
 {
 	struct server_arg_element *server_arg;
-	int comm_source,length,comm_tag,ack_tag;
+	int comm_source, length,comm_tag, ack_tag;
 	char *parameter;
 	char *save_ptr;
 	char *final;
@@ -58,48 +58,48 @@ void *master_server_handler(void * arg)
 
 	server_arg = (struct server_arg_element *)arg;
 
-	parameter = strtok_r(server_arg->msg,";",&save_ptr);	//comm_tag;length;ack_tag
+	parameter = strtok_r(server_arg->msg, ";", &save_ptr);	//comm_tag;length;ack_tag
 	comm_tag = atoi(parameter);
 
-	parameter = strtok_r(NULL,";",&save_ptr);
+	parameter = strtok_r(NULL, ";", &save_ptr);
 	length = atoi(parameter);
 
-	parameter = strtok_r(NULL,";",&save_ptr);
+	parameter = strtok_r(NULL, ";", &save_ptr);
 	ack_tag = atoi(parameter);
 
 	comm_source = server_arg->status.MPI_SOURCE;
 
-	final = (char *)malloc(length*sizeof(char));
+	final = (char *)malloc(length);
 
-	MPI_Recv(final,length,MPI_CHAR,comm_source,comm_tag,MPI_COMM_WORLD,&status);
+	MPI_Recv(final, length, MPI_CHAR, comm_source, comm_tag, MPI_COMM_WORLD, &status);
 
-	printf("master recv %s!\n",final);
+	printf("master recv %s!\n", final);
 
 	switch(msg_type(final))
 	{
 		case SUB_CLUSTER_HEART_BEAT:
 			printf("msg : sub cluster heart beat\n");
-			sub_cluster_heart_beat_handler(comm_source,ack_tag,final);
+			sub_cluster_heart_beat_handler(comm_source, ack_tag, final);
 			break;
 		case JOB_SUBMIT:
 			printf("msg : job submit\n");
-			job_submit_handler(comm_source,ack_tag,final);
+			job_submit_handler(comm_source, ack_tag, final);
 			break;
 		case SCHEDULE_UNIT_FINISH:
 			printf("msg : schedule unit finish\n");
-			schedule_unit_finish_handler(comm_source,ack_tag,final);
+			schedule_unit_finish_handler(comm_source, ack_tag, final);
 			break;
 		case REGISTRATION_M://机器注册，读取作业信息，这是进行作业的第一步
 			printf("msg : registration_m\n");
-			registration_m_handler(comm_source,ack_tag,final);
+			registration_m_handler(comm_source, ack_tag, final);
 			break;
 		case CHILD_CREATE:
 			printf("msg : child create s_to_m\n");
-			child_create_s_to_m_handler(comm_source,ack_tag,final);
+			child_create_s_to_m_handler(comm_source, ack_tag, final);
 			break;
 		case CHILD_WAIT_ALL:
 			printf("msg : child wait all s_to_m\n");
-			child_wait_all_s_to_m_handler(comm_source,ack_tag,final);
+			child_wait_all_s_to_m_handler(comm_source, ack_tag, final);
 			break;
 /*			
 		case GET_SUB_TASK_IP:
@@ -109,11 +109,11 @@ void *master_server_handler(void * arg)
 */
 		case MACHINE_HEART_BEAT:
 			printf("msg : machine heart beat_m\n");
-			machine_heart_beat_m_handler(comm_source,ack_tag,final);
+			machine_heart_beat_m_handler(comm_source, ack_tag, final);
 			break;
 		default:
 			printf("unknown msg\n");
-			printf("msg is %s!\n",final);
+			printf("msg is %s!\n", final);
 			log_error("master unknown msg\n");
 			exit(1);
 	}
@@ -1474,7 +1474,7 @@ void registration_m_handler(int comm_source,int ack_tag,char *arg)
 	}
 }
 
-void sub_cluster_heart_beat_handler(int comm_source,int ack_tag,char *arg)
+void sub_cluster_heart_beat_handler(int comm_source, int ack_tag, char *arg)
 {
 	struct sub_cluster_status_list_element *t;
 	char *t_arg;

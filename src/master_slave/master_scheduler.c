@@ -36,8 +36,8 @@ void change_schedule_unit_status_to_running(int schedule_unit_index,int selected
 struct sub_pack_description_tree_element *find_parent_root(int schedule_unit_index,struct job_description_element *t_running_job_list,int *level);
 void init_tree_element(struct job_description_element *job,int schedule_unit_index);
 void rank_schedule_unit();
-void try_split_sub_pack();
-void split_one_sub_pack_to_two(int index,int max_num);
+//void try_split_sub_pack();
+//void split_one_sub_pack_to_two(int index,int max_num);
 void fill_sub_cluster_description(struct sub_cluster_status_list_element *t);
 void update_priority();
 void update_a_job_priority(struct job_description_element *t);
@@ -198,14 +198,14 @@ int calc_longest_path(int start_node_index)
 		return 0;
 	}
 
-	for(i=0;i<DAG_node_num;i++)
+	for(i = 0; i < DAG_node_num; i++)
 	{
 		path_len[i] = -1;
 	}
 
-	for(i=start_node_index+1;i<DAG_node_num;i++)
+	for(i = start_node_index + 1; i < DAG_node_num; i++)
 	{
-		if(DAG[start_node_index][i]!=0)
+		if(DAG[start_node_index][i] != 0)
 		{
 			path_len[i] = DAG[start_node_index][i] + calc_longest_path(i);
 		}
