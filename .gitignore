@@ -1,7 +1,5 @@
 .cproject
 .project
-./src/master_slave/exe_framework
-./src/master_slave/log/*.*
 
 # Object files
 *.o
