@@ -1519,8 +1519,8 @@ void fill_sub_machine_status(char *arg,struct sub_cluster_status_list_element *t
 	int i;
 
 	t_arg = strdup(arg);
-
-	printf("t_arg = %s\n",t_arg);
+	//printf("arg = %s\n", arg);
+	printf("t_arg = %s\n", t_arg);
 
 	parameter = strtok_r(t_arg,",",&save_ptr);
 	sub_machine_num = atoi(parameter);

@@ -16,6 +16,7 @@
 #include "./common/api.h"
 #include "./common/debug.h"
 #include "data_computation.h"
+#include "master_scheduler.h"
 #include "log.h"
 
 void master_init();

@@ -105,11 +105,12 @@ static int get_a_tag()
  */
 void send_recv_msg(int comm_source, int init_tag, msg_t msg_type, char *send_msg, char **recv_msg)
 {
-	char pre_msg[20];
+	char pre_msg[20] = {0};
 	//why 50 not 33 ?
 	char final_msg[strlen(send_msg) + 50];
+	memset(final_msg, 0, strlen(send_msg) + 50);
 	char *ret_msg;
-	char msg_type_c[32];
+	char msg_type_c[32] = {0};
 	char parameter[6];
 	time_t start, finish;
 	int ack_tag;
@@ -149,7 +150,7 @@ void send_recv_msg(int comm_source, int init_tag, msg_t msg_type, char *send_msg
 	strcat(final_msg, send_msg);
 
 	start = time(NULL);
-
+	//printf("MSG ===== %s\n", send_msg);
 	MPI_Sendrecv(final_msg, strlen(final_msg) + 1, MPI_CHAR, comm_source, comm_tag, ret_msg, 32, MPI_CHAR, comm_source, ack_tag, MPI_COMM_WORLD, &status);
 
 	finish = time(NULL);

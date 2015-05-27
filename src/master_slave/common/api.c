@@ -166,21 +166,21 @@ struct child_wait_all_list_element *find_element_in_child_wait_all_list_s(int ty
 		{
 			if(type == 0)
 			{
-				if(t_child_wait_all_list_s->top_id==top_id)
+				if(t_child_wait_all_list_s->top_id == top_id)
 				{
 					break;
 				}
 			}
 			else
 			{
-				for(i=0;i<10;i++)
+				for(i = 0; i < 10; i++)
 				{
-					if(t_child_wait_all_list_s->id[i]!=id[i])
+					if(t_child_wait_all_list_s->id[i] != id[i])
 					{
 						break;
 					}
 				}
-				if(i==10)
+				if(i == 10)
 				{
 					break;
 				}
@@ -574,9 +574,9 @@ void API_computation_node_assign(int machine_id)
 
 int API_registration_m(struct machine_description_element local_machine_status)
 {
-	char msg[44];
+	char msg[44] = {0};
 	char *ret_msg;
-	char t_msg[6];
+	char t_msg[6] = {0};
 	char *append = ",";
 
 	copy_int_to_msg(msg, t_msg, local_machine_status.CPU_core_num, append);
@@ -587,7 +587,7 @@ int API_registration_m(struct machine_description_element local_machine_status)
 
 	itoa(t_msg, local_machine_status.memory_swap);
 	strcat(msg, t_msg);
-
+	printf("MSG =====swap = %d %s\n",  local_machine_status.memory_swap, t_msg);
 	send_recv_msg(0, 0, REGISTRATION_M, msg, &ret_msg);
 
 	free(ret_msg);
@@ -960,8 +960,6 @@ int API_sub_cluster_shut_down(int sub_master_id)
  */
 int API_machine_heart_beat()
 {
-	//TODO I don't know why send_msg[24] would bug, override by other variable memory?
-	//char send_msg[24];
 	char *ret_msg;
 	char t_arg[6] = {0};
 	char *append = ",";
@@ -972,7 +970,7 @@ int API_machine_heart_beat()
 	copy_int_to_msg(send_msg, t_arg, local_machine_status.CPU_free, append);
 	copy_int_to_msg(send_msg, t_arg, local_machine_status.GPU_load, append);
 	copy_int_to_msg(send_msg, t_arg, local_machine_status.memory_free, append);
-	copy_int_to_msg(send_msg, t_arg, local_machine_status.network_free, append);
+	copy_int_to_msg(send_msg, t_arg, local_machine_status.network_free, "");
 
 	if(local_machine_role == SUB_MASTER_MACHINE || local_machine_role == COMPUTATION_MACHINE)
 	{
@@ -1316,7 +1314,6 @@ void itoa(char *num_c, int num)
 		//TODO log error
 		return;
 	}
-	char t[6];
 	int i;
 	int index = 0;
 
@@ -1330,21 +1327,25 @@ void itoa(char *num_c, int num)
 	if(num == 0)
 	{
 		num_c[index++] = '0';
+
+	}else{
+		while(num > 0)
+		{
+			num_c[index] = num % 10 + '0';
+			num = num / 10;
+			index++;
+		}
 	}
 
-	while(num > 0)
+	int times = index / 2;
+	char t;
+	for(i = 0; i < times; i++)
 	{
-		t[index] = num % 10 + '0';
-		num = num / 10;
-		index++;
+		t = num_c[i];
+		num_c[i] = num_c[index - i - 1];
+		num_c[index - i - 1] = t;
 	}
-
-	num_c[index] = '\0';
-
-	for(i = 0; i < index; i++)
-	{
-		num_c[i] = t[index - i - 1];
-	}
+	num_c[index] = 0;
 }
 
 char *ltoa(int num)

@@ -4,7 +4,7 @@
 #define _DATA_COMPUTATION_H
 
 char master_ip[16];
-volatile int sub_master_comm_id;//设置成全局变量，多个线程可以进行访问
+volatile int sub_master_comm_id; //设置成全局变量，多个线程可以进行访问
 char local_ip[16];
 
 struct machine_description_element local_machine_status;
