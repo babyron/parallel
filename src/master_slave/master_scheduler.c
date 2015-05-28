@@ -505,6 +505,7 @@ static void fill_sub_cluster_description(struct sub_cluster_status_list_element 
  */
 static void update_priority()
 {
+	//job list
 	struct job_description_element *t_running_job_list;
 
 	pthread_mutex_lock(&running_job_list_m_lock);//lock global variable
@@ -513,7 +514,6 @@ static void update_priority()
 	while(t_running_job_list != NULL)//循环更新所有作业的优先级
 	{
 		update_a_job_priority(t_running_job_list);
-
 		t_running_job_list = t_running_job_list->next;
 	}
 
@@ -536,10 +536,8 @@ static void update_a_job_priority(struct job_description_element *t)
 
 		start_node = (int *)malloc(DAG_node_num * sizeof(int));
 		node_b_level = (int *)malloc(DAG_node_num * sizeof(int));
-		for(i = 0; i < DAG_node_num; i++)
-		{
-			node_b_level[i] = -1;
-		}
+		//0 and 1 can use memset to initialize
+		memset(node_b_level, -1, DAG_node_num * sizeof(int));
 
 		select_start_node(start_node);
 
@@ -631,45 +629,39 @@ static int construct_DAG(struct job_description_element *t)
 	int left_time;
 	int construct_fail_flag;//用于标志是否构造成功
 	int n_time;
-	int i,j;
+	int i, j;
 
 	p_DAG = t->job.sub_unit_DAG;
-	/**构造DAG矩阵，其大小与p_DAG相同，先初始化为0**/
+	/*构造DAG矩阵，其大小与p_DAG相同，先初始化为0*/
 	DAG_node_num = t->job.sub_unit_num;//表示子作业的数量
 
-	DAG = (int **)malloc(DAG_node_num*sizeof(int *));
+	DAG = (int **)malloc(DAG_node_num * sizeof(int *));
 
-	for(i=0;i<DAG_node_num;i++)
+	for(i = 0; i < DAG_node_num; i++)
 	{
-		DAG[i] = (int *)malloc(DAG_node_num*sizeof(int));
-	}
-
-	for(i=0;i<DAG_node_num;i++)
-	{
-		for(j=0;j<DAG_node_num;j++)
-		{
-			DAG[i][j] = 0;
-		}
+		DAG[i] = (int *)malloc(DAG_node_num * sizeof(int));
+		memset(DAG[i], 0, sizeof(int) * DAG_node_num);
+		//TODO check malloc fail
 	}
 
 	construct_fail_flag = 0;
 
-	for(i=0;i<DAG_node_num;i++)//循环查看每个子作业的状态
+	for(i = 0; i < DAG_node_num; i++)//循环查看每个子作业的状态
 	{
-		if(t->job.normal_sub_task_description_array[i].status==FINISHED)
+		if(t->job.normal_sub_task_description_array[i].status == FINISHED)
 		{
 		}
-		else if(t->job.normal_sub_task_description_array[i].status==RUNNING)
+		else if(t->job.normal_sub_task_description_array[i].status == RUNNING)
 		{
 			n_time = time(NULL);
 
-			if(t->job.normal_sub_task_description_array[i].prime_sub_task_description.exe_time==0)
+			if(t->job.normal_sub_task_description_array[i].prime_sub_task_description.exe_time == 0)
 			{
 				construct_fail_flag = 1;
 				break;
 			}
-			//start_time >= exe_time？？
-			if(n_time - t->job.normal_sub_task_description_array[i].start_time>=t->job.normal_sub_task_description_array[i].prime_sub_task_description.exe_time)
+			//TODO start_time >= exe_time？？
+			if(n_time - t->job.normal_sub_task_description_array[i].start_time >= t->job.normal_sub_task_description_array[i].prime_sub_task_description.exe_time)
 			{
 				left_time = t->job.normal_sub_task_description_array[i].prime_sub_task_description.exe_time;
 			}
@@ -678,26 +670,26 @@ static int construct_DAG(struct job_description_element *t)
 				left_time = n_time - t->job.normal_sub_task_description_array[i].start_time;
 			}
 
-			for(j=i+1;j<DAG_node_num;j++)
+			for(j = i + 1; j < DAG_node_num; j++)
 			{
-				if(p_DAG[i][j].rely_type==1)//有依赖关系则将权值设为执行时间数
+				if(p_DAG[i][j].rely_type == 1)//有依赖关系则将权值设为执行时间数
 				{
 					DAG[i][j] = left_time;
 				}
 			}
 		}
-		else if(t->job.normal_sub_task_description_array[i].status==NOT_EMIT)//作业还没有真正运行，即初始情况
+		else if(t->job.normal_sub_task_description_array[i].status == NOT_EMIT)//作业还没有真正运行，即初始情况
 		{
-			if(t->job.normal_sub_task_description_array[i].prime_sub_task_description.exe_time==0)
+			if(t->job.normal_sub_task_description_array[i].prime_sub_task_description.exe_time == 0)
 			{
 				construct_fail_flag = 1;
 				break;
 			}
 			/**这里将剩余执行时间设置成预设的执行时间**/
 			left_time = t->job.normal_sub_task_description_array[i].prime_sub_task_description.exe_time;
-			for(j=i+1;j<DAG_node_num;j++)
+			for(j = i + 1; j < DAG_node_num; j++)
 			{
-				if(p_DAG[i][j].rely_type==1)
+				if(p_DAG[i][j].rely_type == 1)
 				{
 					DAG[i][j] = left_time;
 				}
@@ -705,9 +697,9 @@ static int construct_DAG(struct job_description_element *t)
 		}
 	}
 
-	if(construct_fail_flag==1)
+	if(construct_fail_flag == 1)
 	{
-		for(i=0;i<DAG_node_num;i++)
+		for(i = 0; i < DAG_node_num; i++)
 		{
 			free(DAG[i]);
 		}
@@ -716,10 +708,8 @@ static int construct_DAG(struct job_description_element *t)
 		DAG_node_num = 0;
 		return 0;
 	}
-	else
-	{
-		return 1;
-	}
+
+	return 1;
 }
 
 /**
@@ -727,43 +717,28 @@ static int construct_DAG(struct job_description_element *t)
  */
 static void select_start_node(int *start_node)
 {
-	int i,j;
-//初始化
-	for(i=0;i<DAG_node_num;i++)
-	{
-		start_node[i] = 0;
-	}
-/*下面这段代码在做一件事情，找到这个有向无环图的起点并标记，这个起点可以有多个*/
-	for(i=0;i<DAG_node_num;i++)
-	{
-		for(j=i+1;j<DAG_node_num;j++)
-		{
-			if(DAG[i][j])
-			{
-				start_node[i] = 1;
-			}
-		}
-	}
-	start_node[i-1] = 1;
+	int i, j;
 
-	for(i=0;i<DAG_node_num;i++)
+	/*TODO I have thought about this but I don't know whether this is logical right*/
+	for(i = 0; i < DAG_node_num; i++){
+		start_node[i] = 1;
+	}
+
+	for(i = 0; i < DAG_node_num; i++)
 	{
-		if(start_node[i]==1)
+		for(j = 0; j < i; j++)
 		{
-			for(j=0;j<i;j++)
+			if(DAG[j][i] != 0)
 			{
-				if(DAG[j][i]!=0)
-				{
-					start_node[i] = 0;
-					break;
-				}
+				start_node[i] = 0;
+				break;
 			}
 		}
 	}
 }
 
 /**
- * 计算出从起始点出发到结束节所需最长的执行时间，该算发只适合与无向无环图，即把有向无环
+ * 计算出从起始点出发到结束节所需最长的执行时间，该算法只适合与无向无环图，即把有向无环
  * 图的形式化简成无向无环图的形式才能用此方法
  */
 static int calc_longest_path(int start_node_index)
@@ -1058,13 +1033,12 @@ static int try_to_create_sub_cluster(int need_machine_num,int schedule_unit_inde
 }
 
 /*
- * 该线程负责调度,在所有线程执行完之前一直运行
- * 该程序每隔一秒更新一下优先级,从而按照新的优先级来进行调度
+ * 该线程负责调度, 在所有线程执行完之前一直运行
+ * 该程序每隔一秒更新一下优先级, 从而按照新的优先级来进行调度
  */
 void *master_scheduler(void *arg)
 {
 	int i;
-
 	/**
 	 * 初始化调度
 	 */
