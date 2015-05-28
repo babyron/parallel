@@ -722,10 +722,6 @@ static void select_start_node(int *start_node)
 	/*TODO I have thought about this but I don't know whether this is logical right*/
 	for(i = 0; i < DAG_node_num; i++){
 		start_node[i] = 1;
-	}
-
-	for(i = 0; i < DAG_node_num; i++)
-	{
 		for(j = 0; j < i; j++)
 		{
 			if(DAG[j][i] != 0)
