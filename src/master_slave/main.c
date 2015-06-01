@@ -18,6 +18,7 @@
 #include "data_computation.h"
 #include "master_scheduler.h"
 #include "log.h"
+#include "machine_status.h"
 
 void master_init();
 void *master_server(void *null_arg);
@@ -30,24 +31,14 @@ extern void *local_msg_daemon(void *arg);
 void *computation_server(void *arg);
 void computation_init();
 void read_conf_file();
-void init_local_machine_status();
 void lists_init(void);
-int get_local_machine_CPU_core_num();
-int get_version1();
-int get_local_machine_CPU_core_num_red_hat();
-int get_local_machine_memory_total_red_hat();
 void factors_init();
-int get_local_machine_network_capacity();
-int get_local_machine_memory_total();
 
 int main(int argc, char *argv[]) {
 	int p, id;
 	int t;
-
 	int provided;
-
 	pthread_t tid[4];
-
 	exit_debug();
 
 	log_before_start_up();
@@ -84,7 +75,7 @@ int main(int argc, char *argv[]) {
 		master_init();
 
 		printf("parent pid = %d\n", getpid());
-		pthread_create(&tid[0], NULL, master_scheduler, NULL);//创建一线程负责调度
+		pthread_create(&tid[0], NULL, master_scheduler, NULL); //创建一线程负责调度
 		pthread_create(&tid[1], NULL, master_server, NULL);
 
 		pthread_join(tid[0], NULL);
@@ -95,7 +86,7 @@ int main(int argc, char *argv[]) {
 		printf("child pid = %d\n", getpid());
 //		sleep(8);
 
-		API_registration_m(local_machine_status);//local_machine_status is a global variable
+		API_registration_m(local_machine_status); //local_machine_status is a global variable
 		//由于使用MPI在每个MPI进程互不影响
 
 		pthread_mutex_lock(&local_machine_role_m_lock);
@@ -110,9 +101,9 @@ int main(int argc, char *argv[]) {
 		 */
 		//在非主节点中发起四个线程，一个计算服务进程，三个守护进程。
 		pthread_create(&tid[0], NULL, computation_server, NULL);
-		pthread_create(&tid[1], NULL, dynamic_info_get_daemon, NULL);//用于动态获取信息（暂时不重要）
-		pthread_create(&tid[2], NULL, machine_heart_beat_daemon, NULL);//心跳函数
-		pthread_create(&tid[3], NULL, local_msg_daemon, NULL);//暂且不管这个问题
+		pthread_create(&tid[1], NULL, dynamic_info_get_daemon, NULL);   //用于动态获取信息（暂时不重要）
+		pthread_create(&tid[2], NULL, machine_heart_beat_daemon, NULL); //心跳函数
+		pthread_create(&tid[3], NULL, local_msg_daemon, NULL);          //暂且不管这个问题
 
 		pthread_join(tid[0], NULL);
 		pthread_join(tid[1], NULL);
@@ -202,8 +193,8 @@ void * master_server(void * null_arg) {
 void computation_init() {
 	long int msg_queue_id;
 
-	read_conf_file();//目前没有做任何操作
-	init_local_machine_status();//初始化机器各个数据，包括带宽、内存等
+	read_conf_file(); 					//目前没有做任何操作
+	init_local_machine_status();		//初始化机器各个数据，包括带宽、内存等
 
 	sub_cluster_id = 0;
 
@@ -227,8 +218,9 @@ void computation_init() {
 		exit(1);
 	}
 
-	msgctl(msg_queue_id, IPC_RMID, 0);//将消息队列删除？？
+	msgctl(msg_queue_id, IPC_RMID, 0); //将消息队列删除？？
 }
+
 /**
  * 各种链表初始化
  */
@@ -253,21 +245,6 @@ void lists_init(void) {
 	pthread_mutex_init(&log_m_lock, NULL);
 }
 
-void init_local_machine_status() {
-	local_machine_status.CPU_core_num = get_local_machine_CPU_core_num();
-	local_machine_status.GPU_core_num = 5;
-	local_machine_status.CPU_free = 1000;
-	local_machine_status.GPU_load = 0;
-	local_machine_status.memory_free = 1000;
-	local_machine_status.network_free = 0;
-	local_machine_status.IO_bus_capacity = 100;
-	local_machine_status.network_capacity = get_local_machine_network_capacity();
-	local_machine_status.memory_total = get_local_machine_memory_total();
-	local_machine_status.memory_swap = 0;
-
-	factors_init();
-}
-
 void factors_init() {
 	CPU_free_factor = local_machine_status.CPU_core_num;
 	memory_free_factor = (float) local_machine_status.memory_total
@@ -278,117 +255,6 @@ void factors_init() {
 		printf("unknown network capacity! default factor = 1.0\n");
 		network_free_factor = 1.0;
 	}
-}
-
-int get_local_machine_network_capacity() {
-	FILE *fp;
-	char cmd[40];
-	char *line;
-	char *save_ptr;
-	char *parameter;
-	size_t len;
-	int speed;
-	int ret;
-
-	speed = 100;
-	return (speed * 1024) / 8;
-}
-
-int get_local_machine_memory_total() {
-	int version;
-
-	version = get_version1();
-
-	if (version == 0) {
-		return get_local_machine_memory_total_red_hat();
-	} else {
-		printf("unknown version");
-		log_error("unknown version");
-		exit(1);
-		return -1;
-	}
-}
-
-int get_local_machine_memory_total_red_hat() {
-	FILE *fp;
-	char *line;
-	char sub[20];
-	unsigned long int memtotal;
-	int memtotal_int;
-	size_t len;
-	int ret;
-
-	fp = fopen("/proc/meminfo", "r");
-
-	while (1) {
-		line = NULL;
-		ret = getline(&line, &len, fp);
-		if (ret == -1) {
-			free(line);
-			break;
-		} else {
-			if (strstr(line, "MemTotal")) {
-				sscanf(line, "%s %ld", sub, &memtotal);
-				free(line);
-				break;
-			}
-			free(line);
-		}
-	}
-
-	memtotal_int = memtotal / 1024 / 10;
-	fclose(fp);
-
-	return memtotal_int;
-}
-
-int get_local_machine_CPU_core_num() {
-	int version;
-
-	version = get_version1();//??何用
-	if (version == 0) {
-		return get_local_machine_CPU_core_num_red_hat();
-	} else {
-		printf("unknown version");
-		log_error("unknown version");
-		exit(1);
-		return -1;
-	}
-}
-
-int get_local_machine_CPU_core_num_red_hat() {
-	FILE *fp;
-	char *line;
-	size_t len;
-	int core_num;
-	size_t ret;
-
-	fp = fopen("/proc/stat", "r");
-
-	core_num = 0;
-
-	while (1) {
-		line = NULL;
-		ret = getline(&line, &len, fp);
-		if (ret == -1) {
-			free(line);
-			break;
-		} else {
-			if (strstr(line, "cpu")) {
-				core_num++;
-			}
-			free(line);
-		}
-	}
-
-	core_num--;
-	fclose(fp);
-
-	return core_num;
-}
-
-int get_version1() {
-	return 0;
 }
 
 void read_conf_file() {

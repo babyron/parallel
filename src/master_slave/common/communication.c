@@ -185,13 +185,13 @@ void advanced_recv(int socket_fd,char **msg,msg_t msg_type)
 
 void send_ack_msg(int comm_source, int ack_tag, char *ret)
 {
-	char ack[32];
+	char ack[32] = {0};
 	int ret_v;
 	int len;
 	char *parameter;
 	int flag;
-	MPI_Request request;
-	MPI_Status status;
+	//MPI_Request request;
+	//MPI_Status status;
 /*
 	ack = (char *)malloc(32*sizeof(char));
 
@@ -201,8 +201,8 @@ void send_ack_msg(int comm_source, int ack_tag, char *ret)
 		exit(1);
 	}
 */
-	strcpy(ack,"ACK:");
-	strcat(ack,ret);
+	strcpy(ack, "ACK:");
+	strcat(ack, ret);
 
 	ret_v = MPI_Send(ack, 5, MPI_CHAR, comm_source, ack_tag, MPI_COMM_WORLD);
 

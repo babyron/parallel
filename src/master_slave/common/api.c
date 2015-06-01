@@ -13,6 +13,7 @@
 #include "communication.h"
 #include "api.h"
 #include "../data_computation.h"
+#include "../machine_status.h"
 #include "../structure/type_size.h"
 
 //void master_get_machine_ip(int machine_id, char *ip);
@@ -587,7 +588,7 @@ int API_registration_m(struct machine_description_element local_machine_status)
 
 	itoa(t_msg, local_machine_status.memory_swap);
 	strcat(msg, t_msg);
-	printf("MSG =====swap = %d %s\n",  local_machine_status.memory_swap, t_msg);
+	//printf("MSG =====swap = %d %s\n",  local_machine_status.memory_swap, t_msg);
 	send_recv_msg(0, 0, REGISTRATION_M, msg, &ret_msg);
 
 	free(ret_msg);

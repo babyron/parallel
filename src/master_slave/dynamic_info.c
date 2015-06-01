@@ -10,6 +10,7 @@
 #include "./common/api.h"
 #include "data_computation.h"
 #include "dynamic_info.h"
+#include "machine_status.h"
 
 /*====================private declaration====================*/
 static void get_version();
@@ -19,7 +20,7 @@ static float calc_cpu_load(struct cpu_stat_element t1,struct cpu_stat_element t2
 static void get_cpu_stat(struct cpu_stat_element *t);
 static void get_memory_load();
 static void get_memory_load_red_hat();
-static void get_network_stat(unsigned long int total_num[16]);
+//static void get_network_stat(unsigned long int total_num[16]);
 static int can_send_machine_heart_beat();
 static int can_send_sub_cluster_heart_beat();
 
@@ -32,7 +33,7 @@ static void get_version()
 static void get_cpu_and_network_load()
 {
 
-	if(version==0)
+	if(version == 0)
 	{
 		get_cpu_and_network_load_red_hat();
 	}
@@ -41,7 +42,7 @@ static void get_cpu_and_network_load()
 
 static void get_cpu_and_network_load_red_hat()
 {
-	struct cpu_stat_element t1,t2;
+	struct cpu_stat_element t1, t2;
 	unsigned long int total_num1[16];
 	unsigned long int total_num2[16];
 	unsigned int network_load;
@@ -55,7 +56,7 @@ static void get_cpu_and_network_load_red_hat()
 	get_cpu_stat(&t2);
 //	get_network_stat(total_num2);
 
-	cpu_load = calc_cpu_load(t1,t2);
+	cpu_load = calc_cpu_load(t1, t2);
 //	network_load = calc_network_load(total_num1,total_num2);
 
 	network_load = 0;
@@ -67,7 +68,7 @@ static void get_cpu_and_network_load_red_hat()
 	local_machine_status.network_free = 10000;
 }
 
-static float calc_cpu_load(struct cpu_stat_element t1,struct cpu_stat_element t2)
+static float calc_cpu_load(struct cpu_stat_element t1, struct cpu_stat_element t2)
 {
 	unsigned long int total_differ;
 	unsigned long int idle_differ;
@@ -85,7 +86,7 @@ static float calc_cpu_load(struct cpu_stat_element t1,struct cpu_stat_element t2
 
 	idle_differ = t2.idle - t1.idle;
 
-	ret = 1.0 - (float)idle_differ/(float)total_differ;
+	ret = 1.0 - (float)idle_differ / (float)total_differ;
 
 	return ret;
 }
@@ -100,14 +101,14 @@ static void get_cpu_stat(struct cpu_stat_element *t)
 
 	line = NULL;
 
-	fp = fopen("/proc/stat","r");
-	if(fp==NULL)
+	fp = fopen("/proc/stat", "r");
+	if(fp == NULL)
 	{
 		perror("open proc stat error!!\n");
 		log_error("open proc stat error!!\n");
 		exit(1);
 	}
-	getline(&line,&len,fp);
+	getline(&line, &len, fp);
 	ret = fclose(fp);
 
 	strtok(line, " ");
@@ -177,7 +178,7 @@ static void get_memory_load_red_hat()
 */
 	local_machine_status.memory_free = 10000;
 }
-
+/*
 static void get_network_stat(unsigned long int total_num[16])
 {
 	FILE *fp;
@@ -229,9 +230,10 @@ static void get_network_stat(unsigned long int total_num[16])
 
 	fclose(fp);
 }
-
+*/
 /**
  * 用于判断一个节点是否能正常工作
+ * TODO
  */
 static int can_send_machine_heart_beat()
 {
@@ -240,11 +242,11 @@ static int can_send_machine_heart_beat()
 
 	gettimeofday(&t, NULL);
 
-	total_msec = (t.tv_sec - last_machine_heart_beat_time.tv_sec)*1000000;
+	total_msec = (t.tv_sec - last_machine_heart_beat_time.tv_sec) * 1000000;
 
 	total_msec += (t.tv_usec - last_machine_heart_beat_time.tv_usec);
 
-	if(total_msec>PROB_INTERVAL)
+	if(total_msec > PROB_INTERVAL)
 	{
 		return 1;
 	}
@@ -336,7 +338,7 @@ void *sub_cluster_heart_beat_daemon(void *arg)
 
 		sleep(2);
 
-		if(sub_scheduler_on==0)
+		if(sub_scheduler_on == 0)
 		{
 			break;
 		}
@@ -387,9 +389,9 @@ int calc_network_load(unsigned long int total_num1[16], unsigned long int total_
 
 	total_byte = recv_byte + send_byte;
 
-	if(max_byte_per_prob_interval!=0)
+	if(max_byte_per_prob_interval != 0)
 	{
-		ret = total_byte/max_byte_per_prob_interval;
+		ret = total_byte / max_byte_per_prob_interval;
 	}
 	else
 	{

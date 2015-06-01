@@ -34,7 +34,7 @@ int try_wake_up_normal_sub_task(struct job_description_element *t,int top_id,int
 int try_wake_up_sub_pack(struct job_description_element *t,int id[10],int *child_num,char ***ret_args);
 void change_sub_task_status_to_finish_fill_ret_args(int type,int job_id,int top_id,char *ret_arg,int id[10],char *ret_args);
 void delete_element_from_child_wait_all_list_m(struct child_wait_all_list_element *t);
-void get_sub_task_ip_s_to_m_handler(int comm_source,int ack_tag,char *arg);
+//void get_sub_task_ip_s_to_m_handler(int comm_source,int ack_tag,char *arg);
 int get_sub_cluster_id(int type,int job_id,int top_id,int id[10]);
 void destory_sub_cluster(struct sub_cluster_status_list_element *t);
 int can_destory_sub_cluster(struct sub_cluster_status_list_element *t);
@@ -1184,16 +1184,16 @@ void move_to_finished_job_list(struct job_description_element *t)
 
 	assert(running_job_list);
 
-	if(t==running_job_list)
+	if( t== running_job_list)
 	{
 		running_job_list = running_job_list->next;
 	}
 	else
 	{
 		t_running_job_list = running_job_list;
-		while(t_running_job_list->next!=NULL)
+		while(t_running_job_list->next != NULL)
 		{
-			if(t_running_job_list->next==t)
+			if(t_running_job_list->next == t)
 			{
 				t_running_job_list->next = t->next;
 				break;
@@ -1287,31 +1287,22 @@ void auto_job_submit(char *arg)
 	delay_policy();
 }
 
-void job_submit_handler(int comm_source,int ack_tag,char *arg)
+void job_submit_handler(int comm_source, int ack_tag, char *arg)
 {
-	struct job_description_element *t,*t_pre_job_list;
+	struct job_description_element *t, *t_pre_job_list;
 	struct prime_job_description_element *ret;
 	static int job_id;
 	char *t_arg;
-	int i;
+	int i = 0;
 
-	i = 0;
+	//TODO while don't use a function handle this?
+	while(arg[i++] != ';');
 
-	while(arg[i]!=';')
-	{
-		i++;
-	}
+	t_arg = strdup(arg + i);
 
-	i++;
-
-	t_arg = strdup(arg+i);
-
-	send_ack_msg(comm_source,ack_tag,"");
-
-	printf("job path = %s!\n",t_arg);
-
+	send_ack_msg(comm_source, ack_tag, "");
+	printf("job path = %s!\n", t_arg);
 	ret = load_job(t_arg);
-
 	free(t_arg);
 
 	t = (struct job_description_element *)malloc(sizeof(struct job_description_element));
@@ -1399,18 +1390,17 @@ void registration_m_handler(int comm_source,int ack_tag,char *arg)
 
 	i = 0;
 
-	while(arg[i]!=';')
+	while(arg[i] != ';')
 	{
 		i++;
 	}
-
 	i++;
 
-	t_arg = strdup(arg+i);
+	t_arg = strdup(arg + i);
 
-	send_ack_msg(comm_source,ack_tag,"");
+	send_ack_msg(comm_source,ack_tag, "");
 
-	printf("t_arg = %s\n",t_arg);
+	printf("t_arg = %s\n", t_arg);
 
 	machine_id = comm_source;
 
@@ -1483,29 +1473,29 @@ void sub_cluster_heart_beat_handler(int comm_source, int ack_tag, char *arg)
 	int i;
 
 	i = 0;
-	while(arg[i]!=';')
+	while(arg[i] != ';')
 	{
 		i++;
 	}
 
 	i++;
 
-	t_arg = strdup(arg+i);
+	t_arg = strdup(arg + i);
 
-	send_ack_msg(comm_source,ack_tag,"");
+	send_ack_msg(comm_source, ack_tag, "");
 
 	sub_master_id = comm_source;
 	t = get_sub_cluster_element_through_sub_master_id(sub_master_id);
 
-	if(t!=NULL)
+	if(t != NULL)
 	{
-		fill_sub_machine_status(t_arg,t);
+		fill_sub_machine_status(t_arg, t);
 	}
 
 	free(t_arg);
 }
 
-void fill_sub_machine_status(char *arg,struct sub_cluster_status_list_element *t)
+void fill_sub_machine_status(char *arg, struct sub_cluster_status_list_element *t)
 {
 	char *t_arg;
 	char *parameter;
@@ -1522,11 +1512,11 @@ void fill_sub_machine_status(char *arg,struct sub_cluster_status_list_element *t
 	//printf("arg = %s\n", arg);
 	printf("t_arg = %s\n", t_arg);
 
-	parameter = strtok_r(t_arg,",",&save_ptr);
+	parameter = strtok_r(t_arg, ",", &save_ptr);
 	sub_machine_num = atoi(parameter);
-	if(sub_machine_num!=t->sub_machine_num)
+	if(sub_machine_num != t->sub_machine_num)
 	{
-		printf("fill_sub_machine_status fail,sub_machine_num wrong!,%d!=%d",sub_machine_num,t->sub_machine_num);
+		printf("fill_sub_machine_status fail,sub_machine_num wrong!,%d!=%d", sub_machine_num, t->sub_machine_num);
 		log_error("fill_sub_machine_status fail\n");
 		exit(1);
 	}
@@ -1536,13 +1526,13 @@ void fill_sub_machine_status(char *arg,struct sub_cluster_status_list_element *t
 	average_memory_free = 0;
 	average_network_free = 0;
 
-	for(i=0;i<sub_machine_num;i++)
+	for(i = 0; i < sub_machine_num; i++)
 	{
 		machine_id = t->sub_machine_id_list[i];
 
-		parameter = strtok_r(NULL,"_",&save_ptr);
+		parameter = strtok_r(NULL , "_", &save_ptr);
 		master_machine_array[machine_id-1].machine_description.CPU_free = atoi(parameter);
-		if(master_machine_array[machine_id-1].machine_description.CPU_free==0)
+		if(master_machine_array[machine_id-1].machine_description.CPU_free == 0)
 		{
 			printf("CPU = 0  error!\n");
 			log_error("CPU = 0 error!\n");
@@ -1551,15 +1541,15 @@ void fill_sub_machine_status(char *arg,struct sub_cluster_status_list_element *t
 
 		average_CPU_free += master_machine_array[machine_id-1].machine_description.CPU_free;
 
-		parameter = strtok_r(NULL,"_",&save_ptr);
+		parameter = strtok_r(NULL, "_", &save_ptr);
 		master_machine_array[machine_id-1].machine_description.GPU_load = atoi(parameter);
 		average_GPU_load += master_machine_array[machine_id-1].machine_description.GPU_load;
 
-		parameter = strtok_r(NULL,"_",&save_ptr);
+		parameter = strtok_r(NULL, "_", &save_ptr);
 		master_machine_array[machine_id-1].machine_description.memory_free = atoi(parameter);
 		average_memory_free += master_machine_array[machine_id-1].machine_description.memory_free;
 
-		parameter = strtok_r(NULL,"_",&save_ptr);
+		parameter = strtok_r(NULL, "_", &save_ptr);
 		master_machine_array[machine_id-1].machine_description.network_free = atoi(parameter);
 		average_network_free += master_machine_array[machine_id-1].machine_description.network_free;
 	}

@@ -113,13 +113,13 @@ struct normal_sub_task_description_element
 	struct prime_sub_task_description_element prime_sub_task_description;
 
 	int sub_pack_level;		//0: no sub pack	1: 1 sub pack ...
-	struct parallel_sub_task_abstract_element *parallel_sub_task_abstract_array;//从文件读取的子任务描述，包括自己的任务描述也包含
+	struct parallel_sub_task_abstract_element *parallel_sub_task_abstract_array; //从文件读取的子任务描述，包括自己的任务描述也包含
 	struct sub_pack_description_tree_element *root;
 
 	int normal_sub_task_id;
 
 	status_t status;
-	time_t start_time;//初始值为-1
+	time_t start_time; //初始值为-1
 	int priority;
 	int sub_cluster_id;
 };
@@ -204,7 +204,7 @@ struct sub_unit_DAG_element
 
 /**
  * 基本作业单元描述,最顶层的数据结构
- * @sub_unit_num: 子单元编号
+ * @sub_unit_num: 子单元数目
  * @normal_sub_task_description_array: 解决这一作业的子任务描述数组。该程序会读取作业，由于一个作业
  * 可能有多个需要按序执行的任务，故形成这一数组来保存每个任务的状态
  * @total_resource: 子任务总共需要的资源
@@ -317,7 +317,7 @@ struct p_sub_cluster_status_array_element
 	int *sub_machine_id_list;
 };
 
-struct schedule_unit_description_element
+typedef struct schedule_unit_description_element
 {
 	int schedule_unit_type;		//0:normal sub task  1:sub pack
 
@@ -337,7 +337,7 @@ struct schedule_unit_description_element
 
 	char **args;
 
-};
+}schedule_unit_description_element;
 struct schedule_unit_status_list_element
 {
 	int schedule_unit_type;
@@ -440,7 +440,7 @@ struct cpu_stat_element
 	unsigned long int soft_irq;
 };
 
-struct sub_cluster_rank_array_element
+typedef struct sub_cluster_rank_array_element
 {
 	int sub_cluster_id;
 	int sub_machine_num;
@@ -448,7 +448,7 @@ struct sub_cluster_rank_array_element
 	int total_sub_task_num;
 	int priority_task_num[2];
 	int score;
-};
+}sub_cluster_rank_array_element;
 
 struct machine_rank_array_element {
 	int machine_id;

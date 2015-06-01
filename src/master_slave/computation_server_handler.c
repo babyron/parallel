@@ -13,6 +13,7 @@
 #include <mpi.h>
 #include "./structure/data.h"
 #include "data_computation.h"
+#include "machine_status.h"
 #include "./common/api.h"
 #include "./common/communication.h"
 #include "computation_server_handler.h"
@@ -69,7 +70,7 @@ static msg_t msg_type_computation(char *msg)
 			break;
 		}
 	}
-
+	//TODO why don't use operation code?
 	if(!strcmp(type, "SUB_SCHEDULER_ASSIGN"))
 	{
 		return SUB_SCHEDULER_ASSIGN;
@@ -122,7 +123,7 @@ static void sub_scheduler_assign_handler(int comm_source,int ack_tag,char *arg)
 
 	i = 0;
 
-	while(arg[i]!=';')
+	while(arg[i] != ';')
 	{
 		i++;
 	}
@@ -142,28 +143,28 @@ static void sub_scheduler_assign_handler(int comm_source,int ack_tag,char *arg)
 	pthread_mutex_unlock(&local_machine_role_m_lock);
 
 	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
 //	pthread_create(&sub_scheduler_server_tid,&attr,sub_scheduler_server,NULL);
 //	pthread_create(&sub_scheduler_tid,&attr,sub_scheduler,NULL);
 //	pthread_create(&sub_cluster_heart_beat_daemon_tid,&attr,sub_cluster_heart_beat_daemon,NULL);
 
-	ret = pthread_create(&sub_scheduler_server_tid,&attr,sub_scheduler_server,NULL);
-	if(ret!=0)
+	ret = pthread_create(&sub_scheduler_server_tid, &attr, sub_scheduler_server, NULL);
+	if(ret != 0)
 	{
 		perror("p_c sub_scheduler_server\n");
 		log_error("pthread_create sub_scheduler_server error\n");
 		exit(1);
 	}
-	ret = pthread_create(&sub_scheduler_tid,NULL,sub_scheduler,NULL);
-	if(ret!=0)
+	ret = pthread_create(&sub_scheduler_tid, NULL, sub_scheduler, NULL);
+	if(ret != 0)
 	{
 		perror("p_c sub_scheduler\n");
 		log_error("pthread_create sub_scheduler_server error\n");
 		exit(1);
 	}
-	ret = pthread_create(&sub_cluster_heart_beat_daemon_tid,NULL,sub_cluster_heart_beat_daemon,NULL);
-	if(ret!=0)
+	ret = pthread_create(&sub_cluster_heart_beat_daemon_tid, NULL, sub_cluster_heart_beat_daemon, NULL);
+	if(ret != 0)
 	{
 		perror("p_c sub_cluster_heart_beat\n");
 		log_error("pthread_create sub_cluster_heart_beat error\n");
@@ -172,7 +173,7 @@ static void sub_scheduler_assign_handler(int comm_source,int ack_tag,char *arg)
 
 	pthread_attr_destroy(&attr);
 
-	send_ack_msg(comm_source,ack_tag,"");
+	send_ack_msg(comm_source, ack_tag, "");
 
 	free(t_arg);
 }
@@ -198,30 +199,30 @@ static void computation_node_assign_handler(int comm_source,int ack_tag,char *ar
 
 	pthread_mutex_lock(&local_machine_role_m_lock);
 	//？？这段代码表示什么意思，多个角色？？
-	if(local_machine_role==FREE_MACHINE)
+	if(local_machine_role == FREE_MACHINE)
 	{
 		local_machine_role = COMPUTATION_MACHINE;
 	}
-	else if(local_machine_role==HALF_SUB_MASTER_MACHINE)
+	else if(local_machine_role == HALF_SUB_MASTER_MACHINE)
 	{
 		local_machine_role = SUB_MASTER_MACHINE;
 	}
 	else
 	{
-		printf("strang assign computation node previous status = %d\n",local_machine_role);
+		printf("strang assign computation node previous status = %d\n", local_machine_role);
 	}
 
 	pthread_mutex_unlock(&local_machine_role_m_lock);
 
-	printf("arg = %s!\n",t_arg);
+	printf("arg = %s!\n", t_arg);
 
 	sub_master_comm_id = atoi(t_arg);
-	printf("!@#sub master comm id = %d\n",sub_master_comm_id);
+	printf("!@#sub master comm id = %d\n", sub_master_comm_id);
 
 //modified
-	API_registration_s(sub_master_comm_id,local_machine_status);
+	API_registration_s(sub_master_comm_id, local_machine_status);
 
-	send_ack_msg(comm_source,ack_tag,"");
+	send_ack_msg(comm_source, ack_tag, "");
 	free(t_arg);
 }
 
@@ -245,13 +246,13 @@ static void *sub_scheduler_server(void *tt_arg)
 	char *save_ptr;
 
 	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
 	while(1)
 	{
-		MPI_Recv(arg,20,MPI_CHAR,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
+		MPI_Recv(arg, 20, MPI_CHAR,MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
 
-		if(sub_scheduler_on==1)
+		if(sub_scheduler_on == 1)
 		{
 
 			server_arg = NULL;
@@ -259,8 +260,8 @@ static void *sub_scheduler_server(void *tt_arg)
 			server_arg->msg = strdup(arg);
 			server_arg->status = status;
 
-			ret = pthread_create(&tid,&attr,sub_scheduler_server_handler,(void *)server_arg);
-			if(ret!=0)
+			ret = pthread_create(&tid, &attr, sub_scheduler_server_handler, (void *)server_arg);
+			if(ret != 0)
 			{
 				perror("p_c computation_server\n");
 				log_error("pthread_create computation_server\n");
@@ -270,42 +271,42 @@ static void *sub_scheduler_server(void *tt_arg)
 		else
 		{
 			t_arg = strdup(arg);
-			printf("shut down arg = %s\n",arg);
+			printf("shut down arg = %s\n", arg);
 
-			parameter = strtok_r(t_arg,";",&save_ptr);	//comm_tag;length;ack_tag
+			parameter = strtok_r(t_arg, ";", &save_ptr);	//comm_tag;length;ack_tag
 			comm_tag = atoi(parameter);
 
-			parameter = strtok_r(NULL,";",&save_ptr);
+			parameter = strtok_r(NULL, ";", &save_ptr);
 			length = atoi(parameter);
 
-			parameter = strtok_r(NULL,";",&save_ptr);
+			parameter = strtok_r(NULL, ";", &save_ptr);
 			ack_tag = atoi(parameter);
 
 			free(t_arg);
 
 			comm_source = status.MPI_SOURCE;
 
-			if(comm_source<0)
+			if(comm_source < 0)
 			{
 				printf("comm_source<0 !  danger!\n");
 				log_error("phthread_create comm_source<0 ! danger!\n");
 				exit(1);
 			}
-			MPI_Recv(arg,64,MPI_CHAR,comm_source,comm_tag,MPI_COMM_WORLD,&status);
+			MPI_Recv(arg, 64, MPI_CHAR, comm_source, comm_tag, MPI_COMM_WORLD, &status);
 
-			type_c = strtok_r(arg,";",&save_ptr);
+			type_c = strtok_r(arg, ";", &save_ptr);
 
-			if(strcmp(type_c,"TYPE:SUB_CLUSTER_SHUT_DOWN"))
+			if(strcmp(type_c, "TYPE:SUB_CLUSTER_SHUT_DOWN"))
 			{
-				send_ack_msg(comm_source,ack_tag,"");
+				send_ack_msg(comm_source, ack_tag, "");
 				continue;
 			}
 
-			printf("quit final = %s\n",arg);
+			printf("quit final = %s\n", arg);
 
-			pthread_join(sub_scheduler_tid,NULL);
-			pthread_join(sub_cluster_heart_beat_daemon_tid,NULL);
-			send_ack_msg(comm_source,ack_tag,"");
+			pthread_join(sub_scheduler_tid, NULL);
+			pthread_join(sub_cluster_heart_beat_daemon_tid, NULL);
+			send_ack_msg(comm_source, ack_tag, "");
 			break;
 		}
 	}
@@ -316,26 +317,24 @@ static void *sub_scheduler_server(void *tt_arg)
 	return NULL;
 }
 
-static void sub_task_assign_handler(int comm_source,int ack_tag,char *arg)
+static void sub_task_assign_handler(int comm_source, int ack_tag, char *arg)
 {
 	char *t_arg;
 	char *tt_arg;
 	char *parameter;
-	int i;
 
-	i = 0;
-	while(arg[i]!=';')
+	int i = 0;
+	while(arg[i] != ';')
 	{
 		i++;
 	}
-
 	i++;
 
 	t_arg = strdup(arg+i);
 
 	add_element_to_sub_task_running_list(t_arg);
 
-	send_ack_msg(comm_source,ack_tag,"");
+	send_ack_msg(comm_source,ack_tag, "");
 
 	run_sub_task(t_arg);
 
@@ -357,7 +356,7 @@ static void sub_scheduler_init(char *t_arg)
 
 	sub_scheduler_on = 1;
 
-	parameter = strtok_r(t_arg,",",&save_ptr);
+	parameter = strtok_r(t_arg, ",", &save_ptr);
 	sub_cluster_id = atoi(parameter);
 
 	parameter = strtok_r(NULL,",",&save_ptr);
@@ -376,7 +375,7 @@ static void sub_scheduler_init(char *t_arg)
 
 		sub_machine_array[i].comm_id = atoi(parameter);
 
-		if(sub_machine_array[i].comm_id==0)
+		if(sub_machine_array[i].comm_id == 0)
 		{
 			printf("error in sub machine array comm id\n");
 			log_error("error in sub machine array comm id\n");
@@ -384,7 +383,7 @@ static void sub_scheduler_init(char *t_arg)
 		}
 
 		sub_machine_array[i].sub_master_id = 0;
-		memset(&sub_machine_array[i].machine_description,0,sizeof(struct machine_description_element));
+		memset(&sub_machine_array[i].machine_description, 0, sizeof(struct machine_description_element));
 		sub_machine_array[i].machine_status = 0;
 	}
 }
@@ -401,16 +400,16 @@ static void run_sub_task(char *i_arg)
 
 	t_arg = strdup(i_arg);
 
-	arg = (char **)malloc(7*sizeof(char *));
+	arg = (char **)malloc(7 * sizeof(char *));
 
 	strcpy(file_path,"/usr/test/mpi/");
 
-	parameter = strtok_r(t_arg,",",&save_ptr);
+	parameter = strtok_r(t_arg, ",", &save_ptr);
 	strcat(file_path,parameter);
 
 	for(i=0;i<5;i++)
 	{
-		parameter = strtok_r(NULL,",",&save_ptr);
+		parameter = strtok_r(NULL, ",", &save_ptr);
 		arg[i] = strdup(parameter);
 	}
 
@@ -421,15 +420,15 @@ static void run_sub_task(char *i_arg)
 	{
 		ret = vfork();
 
-		if(ret==0)
+		if(ret == 0)
 		{
-			execv(file_path,arg);
+			execv(file_path, arg);
 		}
-		else if(ret>0)
+		else if(ret > 0)
 		{
 			break;
 		}
-		else if(ret==-1)
+		else if(ret == -1)
 		{
 			printf("vfork error!\n");
 			log_error("vfork error!\n");
@@ -438,7 +437,7 @@ static void run_sub_task(char *i_arg)
 		}
 	}
 
-	for(i=0;i<6;i++)
+	for(i = 0; i < 6; i++)
 	{
 		free(arg[i]);
 	}
@@ -446,7 +445,7 @@ static void run_sub_task(char *i_arg)
 	free(t_arg);
 }
 
-static void child_wake_up_all_handler(int comm_source,int ack_tag,char *arg)
+static void child_wake_up_all_handler(int comm_source, int ack_tag, char *arg)
 {
 	int type;
 	int job_id;
@@ -460,7 +459,7 @@ static void child_wake_up_all_handler(int comm_source,int ack_tag,char *arg)
 	int i;
 
 	i = 0;
-	while(arg[i]!=';')
+	while(arg[i] != ';')
 	{
 		i++;
 	}
@@ -468,24 +467,24 @@ static void child_wake_up_all_handler(int comm_source,int ack_tag,char *arg)
 
 	t_arg = strdup(arg+i);
 
-	send_ack_msg(comm_source,ack_tag,"");
+	send_ack_msg(comm_source,ack_tag, "");
 
-	parameter = strtok_r(t_arg,",",&save_ptr);
+	parameter = strtok_r(t_arg, ",", &save_ptr);
 	type = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	job_id = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	top_id = atoi(parameter);
 
 	for(i=0;i<10;i++)
 	{
-		parameter = strtok_r(NULL,"_",&save_ptr);
+		parameter = strtok_r(NULL, "_", &save_ptr);
 		id[i] = atoi(parameter);
 	}
 
-	ret_arg = strdup(strtok_r(NULL,",",&save_ptr));
+	ret_arg = strdup(strtok_r(NULL, ",", &save_ptr));
 
 	API_child_wake_up_all_c_to_p(type,job_id,top_id,id,ret_arg);
 
@@ -551,44 +550,44 @@ static void delete_element_from_sub_task_running_list(char *arg)
 	int id[10];
 	int i;
 
-	assert(sub_task_running_list!=NULL);
+	assert(sub_task_running_list != NULL);
 
 	t_arg = strdup(arg);
 
-	parameter = strtok_r(t_arg,",",&save_ptr);
+	parameter = strtok_r(t_arg, ",", &save_ptr);
 	type = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	job_id = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	top_id = atoi(parameter);
 
-	for(i=0;i<10;i++)
+	for(i = 0; i < 10; i++)
 	{
-		parameter = strtok_r(NULL,"_",&save_ptr);
+		parameter = strtok_r(NULL, "_", &save_ptr);
 		id[i] = atoi(parameter);
 	}
 
 	pthread_mutex_lock(&sub_task_running_list_m_lock);
 
 	t_sub_task_running_list = sub_task_running_list;
-	while(t_sub_task_running_list!=NULL)
+	while(t_sub_task_running_list != NULL)
 	{
-		if((type==t_sub_task_running_list->type)&&(job_id==t_sub_task_running_list->job_id))
+		if((type == t_sub_task_running_list->type) && (job_id == t_sub_task_running_list->job_id))
 		{
 			if(type==0)
 			{
-				if(top_id==t_sub_task_running_list->top_id)
+				if(top_id == t_sub_task_running_list->top_id)
 				{
 					break;
 				}
 			}
 			else
 			{
-				for(i=0;i<10;i++)
+				for(i = 0; i < 10; i++)
 				{
-					if(id[i]!=t_sub_task_running_list->id[i])
+					if(id[i] != t_sub_task_running_list->id[i])
 					{
 						break;
 					}
@@ -825,7 +824,7 @@ void *local_msg_daemon(void *arg)
 void *computation_server_handler(void *arg)
 {
 	struct server_arg_element *server_arg;
-	int comm_source,comm_tag,length,ack_tag;
+	int comm_source, comm_tag, length, ack_tag;
 	char *parameter;
 	char *save_ptr;
 	char *final;
@@ -836,39 +835,39 @@ void *computation_server_handler(void *arg)
 
 	server_arg = (struct server_arg_element *)arg;
 
-	parameter = strtok_r(server_arg->msg,";",&save_ptr);	//comm_tag;length;ack_tag
+	parameter = strtok_r(server_arg->msg, ";", &save_ptr);	//comm_tag;length;ack_tag
 	comm_tag = atoi(parameter);
 
-	parameter = strtok_r(NULL,";",&save_ptr);
+	parameter = strtok_r(NULL, ";", &save_ptr);
 	length = atoi(parameter);
 
-	parameter = strtok_r(NULL,";",&save_ptr);
+	parameter = strtok_r(NULL, ";", &save_ptr);
 	ack_tag = atoi(parameter);
 
 	comm_source = server_arg->status.MPI_SOURCE;
 
-	final = (char *)malloc(length*sizeof(char));
+	final = (char *)malloc(length * sizeof(char));
 	//在解析完消息内容后接受真实的消息内容
-	MPI_Recv(final,length,MPI_CHAR,comm_source,comm_tag,MPI_COMM_WORLD,&status);
+	MPI_Recv(final, length, MPI_CHAR, comm_source, comm_tag, MPI_COMM_WORLD, &status);
 
-	printf("com recv is %s!\n",final);
+	printf("com recv is %s!\n", final);
 
 	switch(msg_type_computation(final))
 	{
 		case SUB_SCHEDULER_ASSIGN:
-			sub_scheduler_assign_handler(comm_source,ack_tag,final);
+			sub_scheduler_assign_handler(comm_source, ack_tag, final);
 			printf("msg : sub scheduler assign\n");
 			break;
 		case COMPUTATION_NODE_ASSIGN:
-			computation_node_assign_handler(comm_source,ack_tag,final);//发出REGISTRATION_S信号
+			computation_node_assign_handler(comm_source, ack_tag, final);//发出REGISTRATION_S信号
 			printf("msg : computation node assign\n");
 			break;
 		case SUB_TASK_ASSIGN://这个信号由sub_scheduler_assign_handler里的调度函数发出
-			sub_task_assign_handler(comm_source,ack_tag,final);//开始执行任务
+			sub_task_assign_handler(comm_source, ack_tag, final);//开始执行任务
 			printf("msg : sub task assign\n");
 			break;
 		case CHILD_WAKE_UP_ALL:
-			child_wake_up_all_handler(comm_source,ack_tag,final);
+			child_wake_up_all_handler(comm_source, ack_tag, final);
 			printf("msg : child wake up all s_to_c\n");
 			break;
 /*
@@ -886,11 +885,11 @@ void *computation_server_handler(void *arg)
 			break;
 		case GET_SUB_TASK_IP:
 			printf("msg : out get sub task ip\n");
-			o_get_sub_task_handler(comm_source,ack_tag,final);
+			o_get_sub_task_handler(comm_source, ack_tag, final);
 			break;
 */
 		case BACK_TO_MAIN_MASTER:
-			back_to_main_master_handler(comm_source,ack_tag,final);
+			back_to_main_master_handler(comm_source, ack_tag, final);
 			printf("msg : back to main master\n");
 			break;
 		default:
@@ -907,7 +906,7 @@ void *computation_server_handler(void *arg)
 }
 
 /*
-void o_get_sub_task_handler(int comm_source,int ack_tag,char *arg)
+void o_get_sub_task_handler(int comm_source, int ack_tag, char *arg)
 {
 	char *t_arg;
 	char *tt_arg;
@@ -966,7 +965,7 @@ void o_get_sub_task_handler(int comm_source,int ack_tag,char *arg)
 }
 */
 
-int is_in_sub_task_running_list(int type,int job_id,int top_id,int id[10])
+int is_in_sub_task_running_list(int type, int job_id, int top_id, int id[10])
 {
 	struct sub_task_running_list_element *t_sub_task_running_list;
 	int i;
@@ -975,27 +974,27 @@ int is_in_sub_task_running_list(int type,int job_id,int top_id,int id[10])
 
 	t_sub_task_running_list = sub_task_running_list;
 
-	while(t_sub_task_running_list!=NULL)
+	while(t_sub_task_running_list != NULL)
 	{
-		if((type==t_sub_task_running_list->type)&&(job_id==t_sub_task_running_list->job_id))
+		if((type == t_sub_task_running_list->type) && (job_id == t_sub_task_running_list->job_id))
 		{
-			if(type==0)
+			if(type == 0)
 			{
-				if(top_id==t_sub_task_running_list->top_id)
+				if(top_id == t_sub_task_running_list->top_id)
 				{
 					break;
 				}
 			}
 			else
 			{
-				for(i=0;i<10;i++)
+				for(i = 0; i < 10; i++)
 				{
-					if(id[i]!=t_sub_task_running_list->id[i])
+					if(id[i] != t_sub_task_running_list->id[i])
 					{
 						break;
 					}
 				}
-				if(i==10)
+				if(i == 10)
 				{
 					break;
 				}
@@ -1007,7 +1006,7 @@ int is_in_sub_task_running_list(int type,int job_id,int top_id,int id[10])
 
 	pthread_mutex_unlock(&sub_task_running_list_m_lock);
 
-	if(t_sub_task_running_list!=NULL)
+	if(t_sub_task_running_list != NULL)
 	{
 		return 1;
 	}

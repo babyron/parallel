@@ -20,7 +20,7 @@ static int DAG_node_num;
 //下面数组为大小可变数组，用于存储可供调度的单元信息（可供调度包含各个级别的作业和任务）
 static struct schedule_unit_description_element *total_schedule_unit_array; //姑且称作无敌调度大数组
 static int total_schedule_unit_num;
-static struct sub_cluster_rank_array_element *sub_cluster_rank_array;//用于选取集群，临时一用，用于排序
+static sub_cluster_rank_array_element *sub_cluster_rank_array;//用于选取集群，临时一用，用于排序
 static int sub_cluster_rank_array_num;
 
 static void master_scheduler_init();
@@ -71,7 +71,7 @@ static void select_schedule_unit(void)
 
 	t_running_job_list = running_job_list;
 
-	while(t_running_job_list!=NULL)
+	while(t_running_job_list != NULL)
 	{
 		add_job_schedule_unit(t_running_job_list);
 		t_running_job_list = t_running_job_list->next;
@@ -84,17 +84,17 @@ static void add_job_schedule_unit(struct job_description_element *job_descriptio
 {
 	struct sub_unit_DAG_element **DAG;
 	int sub_unit_num;
-	int n_id[10];//id用于作为子任务的表示，10个表示总共有10层
+	int n_id[10]; //id用于作为子任务的表示，10个表示总共有10层
 	int n;
 	int i;
 
-	for(i=0;i<10;i++)
+	for(i = 0; i < 10; i++)
 	{
 		n_id[i] = 0;
 	}
 
 	sub_unit_num = job_description->job.sub_unit_num;
-	for(i = 0; i < sub_unit_num; i++)//遍历所有子作业
+	for(i = 0; i < sub_unit_num; i++) //遍历所有子作业
 	{
 		//对于处于未提交状态的子作业
 		if(job_description->job.normal_sub_task_description_array[i].status == NOT_EMIT)
@@ -107,12 +107,12 @@ static void add_job_schedule_unit(struct job_description_element *job_descriptio
 		//对于正在运行的任务，没创建子任务拉倒，创建的话就会把创建的子任务加入到这个数组中
 		else if(job_description->job.normal_sub_task_description_array[i].status == RUNNING)
 		{
-			if((job_description->job.normal_sub_task_description_array[i].sub_pack_level!=0))
+			if((job_description->job.normal_sub_task_description_array[i].sub_pack_level != 0))
 			{
-				if(job_description->job.normal_sub_task_description_array[i].root->child_created==1)
+				if(job_description->job.normal_sub_task_description_array[i].root->child_created == 1)
 				{
-					n_id[0] = i+1;
-					try_add_schedule_unit_sub_pack(job_description->job.normal_sub_task_description_array[i].root,job_description->job_id,n_id,1);
+					n_id[0] = i + 1;
+					try_add_schedule_unit_sub_pack(job_description->job.normal_sub_task_description_array[i].root, job_description->job_id, n_id, 1);
 				}
 			}
 		}
@@ -122,15 +122,15 @@ static void add_job_schedule_unit(struct job_description_element *job_descriptio
 /**
  * 检验之前依赖的作业是否已经完成，只有当依赖的作业已经完成才能进行调度
  */
-static int can_schedule_normal_sub_task(struct prime_job_description_element *prime_job_description,int sub_task_index)
+static int can_schedule_normal_sub_task(struct prime_job_description_element *prime_job_description, int sub_task_index)
 {
 	int i;
 
-	for(i=0;i<sub_task_index;i++)
+	for(i = 0; i < sub_task_index; i++)
 	{
-		if(prime_job_description->sub_unit_DAG[i][sub_task_index].rely_type==1)
+		if(prime_job_description->sub_unit_DAG[i][sub_task_index].rely_type == 1)
 		{
-			if(prime_job_description->normal_sub_task_description_array[i].status!=FINISHED)
+			if(prime_job_description->normal_sub_task_description_array[i].status != FINISHED)
 			{
 				return 0;
 			}
@@ -141,69 +141,77 @@ static int can_schedule_normal_sub_task(struct prime_job_description_element *pr
 }
 
 /**
- * n刚传入时是1，n表示你n_id应该填写的位置，递归程序的终点是child_created==1，一堆子任务当做一个
+ * n刚传入时是1，n表示你n_id应该填写的位置，递归程序的终点是child_created == 1，一堆子任务当做一个
  * 调度单元传入该数组。在这里用子任务中第一个任务的信息作为模板，将其赋值于任务数组中
  */
-static void try_add_schedule_unit_sub_pack(struct sub_pack_description_tree_element *root,int job_id,int n_id[10],int n)
+static void try_add_schedule_unit_sub_pack(struct sub_pack_description_tree_element *root, int job_id, int n_id[10], int n)
 {
 	int i;
-
-	if(root->sub_pack_b_level==0)
+	//what does this mean?
+	if(root->sub_pack_b_level == 0)
 	{
 		return;
 	}
 
-	if(root->child_created==1)
+	if(root->child_created == 1)
 	{
-		if(root->sub_pack_description_tree[0].parallel_sub_task_description.status==CREATED)
+		if(root->sub_pack_description_tree[0].parallel_sub_task_description.status == CREATED)
 		{
-			add_schedule_unit_sub_pack(root,job_id,n_id,n);
+			add_schedule_unit_sub_pack(root, job_id, n_id, n);
 		}
 		else
 		{
-			for(i=0;i<root->parallel_sub_task_description.child_num;i++)
+			for(i = 0; i < root->parallel_sub_task_description.child_num; i++)
 			{
-				if(root->sub_pack_description_tree[i].parallel_sub_task_description.status==RUNNING)
+				if(root->sub_pack_description_tree[i].parallel_sub_task_description.status == RUNNING)
 				{
 					n_id[n] = i;
-					try_add_schedule_unit_sub_pack(&(root->sub_pack_description_tree[i]),job_id,n_id,n+1);
+					try_add_schedule_unit_sub_pack(&(root->sub_pack_description_tree[i]), job_id, n_id, n + 1);
 				}
 			}
 		}
 	}
 }
 
-static void add_schedule_unit_sub_pack(struct sub_pack_description_tree_element *root,int job_id,int n_id[10],int n)
+//TODO no declaration
+static void set_schedule_unit_description_element(schedule_unit_description_element *s, int schedule_unit_type,
+		struct prime_sub_task_description_element prime_sub_task_description, int schedule_unit_num, int job_id,
+		int top_id, int priority, int machine_num, int **ids)
+{
+	s->schedule_unit_type = schedule_unit_type; //sub task
+	s->prime_sub_task_description = prime_sub_task_description;
+	s->schedule_unit_num = schedule_unit_num;
+	s->job_id = job_id;
+	s->top_id = top_id;
+	s->priority = priority;
+	s->machine_num = machine_num;
+	s->ids = ids;
+}
+
+static void add_schedule_unit_sub_pack(struct sub_pack_description_tree_element *root,int job_id, int n_id[10], int n)
 {
 	int i,j;
 
 //	debug_count++;
 
 	total_schedule_unit_num++;
-	total_schedule_unit_array = (struct schedule_unit_description_element *)realloc(total_schedule_unit_array,total_schedule_unit_num*sizeof(struct schedule_unit_description_element));
+	total_schedule_unit_array = (schedule_unit_description_element *)realloc(total_schedule_unit_array, total_schedule_unit_num * sizeof(schedule_unit_description_element));
 
-	total_schedule_unit_array[total_schedule_unit_num-1].schedule_unit_type = 1;//表示为子任务
+	int index = total_schedule_unit_num - 1;
+	set_schedule_unit_description_element(total_schedule_unit_array + index, 1, root->sub_pack_description_tree[0].parallel_sub_task_description.prime_sub_task_description
+			, root->parallel_sub_task_description.child_num, job_id, 0, master_get_sub_task_priority_without_lock(1, job_id, 0, n_id), root->parallel_sub_task_description.machine_num
+			,(int **)malloc(root->parallel_sub_task_description.child_num * sizeof(int *)));
 
-	total_schedule_unit_array[total_schedule_unit_num-1].prime_sub_task_description = root->sub_pack_description_tree[0].parallel_sub_task_description.prime_sub_task_description;
-
-	total_schedule_unit_array[total_schedule_unit_num-1].schedule_unit_num = root->parallel_sub_task_description.child_num;
-	total_schedule_unit_array[total_schedule_unit_num-1].job_id = job_id;
-	total_schedule_unit_array[total_schedule_unit_num-1].top_id = 0;
-	total_schedule_unit_array[total_schedule_unit_num-1].priority = master_get_sub_task_priority_without_lock(1,job_id,0,n_id);
-	total_schedule_unit_array[total_schedule_unit_num-1].machine_num = root->parallel_sub_task_description.machine_num;
-
-	total_schedule_unit_array[total_schedule_unit_num-1].ids = (int **)malloc(root->parallel_sub_task_description.child_num*sizeof(int *));
-
-	for(i=0;i<root->parallel_sub_task_description.child_num;i++)
+	for(i = 0; i < root->parallel_sub_task_description.child_num; i++)
 	{
-		total_schedule_unit_array[total_schedule_unit_num-1].ids[i] = (int *)malloc(10*sizeof(int));
+		total_schedule_unit_array[index].ids[i] = (int *)malloc(10 * sizeof(int));
 	}
 
 	for(i=0;i<root->parallel_sub_task_description.child_num;i++)
 	{
 		for(j=0;j<10;j++)
 		{
-			total_schedule_unit_array[total_schedule_unit_num-1].ids[i][j] = 0;
+			total_schedule_unit_array[index].ids[i][j] = 0;
 		}
 	}
 
@@ -211,39 +219,32 @@ static void add_schedule_unit_sub_pack(struct sub_pack_description_tree_element 
 	{
 		for(j=0;j<n;j++)
 		{
-			total_schedule_unit_array[total_schedule_unit_num-1].ids[i][j] = n_id[j];
+			total_schedule_unit_array[index].ids[i][j] = n_id[j];
 		}
-		total_schedule_unit_array[total_schedule_unit_num-1].ids[i][j] = i+1;
+		total_schedule_unit_array[index].ids[i][j] = i+1;
 	}
 
-	total_schedule_unit_array[total_schedule_unit_num-1].args = (char **)malloc(root->parallel_sub_task_description.child_num*sizeof(char *));
+	total_schedule_unit_array[index].args = (char **)malloc(root->parallel_sub_task_description.child_num*sizeof(char *));
 
-	for(i=0;i<root->parallel_sub_task_description.child_num;i++)
+	for(i = 0; i < root->parallel_sub_task_description.child_num; i++)
 	{
-		total_schedule_unit_array[total_schedule_unit_num-1].args[i] = strdup(root->parallel_sub_task_description.child_args[i]);
+		total_schedule_unit_array[index].args[i] = strdup(root->parallel_sub_task_description.child_args[i]);
 	}
 }
 
-static void add_schedule_unit_normal_sub_task(struct job_description_element *job_description,int normal_sub_task_index)
+static void add_schedule_unit_normal_sub_task(struct job_description_element *job_description, int normal_sub_task_index)
 {
 	total_schedule_unit_num++;
-	//增加数组的大小，realloc
-	total_schedule_unit_array = (struct schedule_unit_description_element *)realloc(total_schedule_unit_array,total_schedule_unit_num*sizeof(struct schedule_unit_description_element));
+	//增加数组的大小，realloc NOT a good design!!!
+	total_schedule_unit_array = (schedule_unit_description_element *)realloc(total_schedule_unit_array, total_schedule_unit_num * sizeof(schedule_unit_description_element));
 	//加入新增的子作业
-	total_schedule_unit_array[total_schedule_unit_num-1].schedule_unit_type = 0;
-
-
-	total_schedule_unit_array[total_schedule_unit_num-1].prime_sub_task_description = job_description->job.normal_sub_task_description_array[normal_sub_task_index].prime_sub_task_description;
-
-	total_schedule_unit_array[total_schedule_unit_num-1].schedule_unit_num = 1;
-	total_schedule_unit_array[total_schedule_unit_num-1].job_id = job_description->job_id;
-	total_schedule_unit_array[total_schedule_unit_num-1].top_id = normal_sub_task_index+1;
-
-	total_schedule_unit_array[total_schedule_unit_num-1].priority = master_get_sub_task_priority_without_lock(0,job_description->job_id,normal_sub_task_index+1,NULL);
-
-	total_schedule_unit_array[total_schedule_unit_num-1].machine_num = 1;
-	total_schedule_unit_array[total_schedule_unit_num-1].ids = NULL;
-	total_schedule_unit_array[total_schedule_unit_num-1].args = NULL;
+	int index = total_schedule_unit_num - 1;
+	set_schedule_unit_description_element(total_schedule_unit_array + index, 0,
+			job_description->job.normal_sub_task_description_array[normal_sub_task_index].prime_sub_task_description,
+			1, job_description->job_id, normal_sub_task_index + 1,
+			master_get_sub_task_priority_without_lock(0, job_description->job_id, normal_sub_task_index + 1, NULL),
+			1, NULL);
+	total_schedule_unit_array[index].args = NULL;
 }
 
 /**
@@ -251,13 +252,13 @@ static void add_schedule_unit_normal_sub_task(struct job_description_element *jo
  */
 static void reset_total_schedule_unit(void)
 {
-	int i,j;
+	int i, j;
 
-	for(i=0;i<total_schedule_unit_num;i++)
+	for(i = 0; i < total_schedule_unit_num; i++)
 	{
-		if(total_schedule_unit_array[i].schedule_unit_type==1)
+		if(total_schedule_unit_array[i].schedule_unit_type == 1)
 		{
-			for(j=0;j<total_schedule_unit_array[i].schedule_unit_num;j++)
+			for(j = 0; j < total_schedule_unit_array[i].schedule_unit_num; j++)
 			{
 				free(total_schedule_unit_array[i].ids[j]);
 				free(total_schedule_unit_array[i].args[j]);
@@ -267,17 +268,14 @@ static void reset_total_schedule_unit(void)
 		}
 	}
 
-
 	free(total_schedule_unit_array);
-
 	total_schedule_unit_array = NULL;
-
 	total_schedule_unit_num = 0;
 }
 
 /**
  * 在这里说一下什么叫做cluster，这个东西由好多机器组成，一个cluster可以运行多个任务，这些任务可以有不同
- * 的优先级，只要集群满足任务的需求，则可以拿来运行
+ * 的优先级，只要集群满足任务的需求，就可以拿来运行
  */
 static void assign_schedule_unit(void)
 {
@@ -285,17 +283,16 @@ static void assign_schedule_unit(void)
 	int i;
 
 	sub_cluster_rank_array = NULL;
-
 	init_sub_cluster_rank_array();
 
-	for(i=0;i<total_schedule_unit_num;i++)
+	for(i = 0; i < total_schedule_unit_num; i++)
 	{
 		selected_sub_cluster_id = select_sub_cluster(i);
 
-		if(selected_sub_cluster_id>0)
+		if(selected_sub_cluster_id > 0)
 		{
-			API_schedule_unit_assign(total_schedule_unit_array[i],selected_sub_cluster_id);
-			change_schedule_unit_status_to_running(i,selected_sub_cluster_id);
+			API_schedule_unit_assign(total_schedule_unit_array[i], selected_sub_cluster_id);
+			change_schedule_unit_status_to_running(i, selected_sub_cluster_id);
 		}
 	}
 
@@ -315,7 +312,7 @@ static void change_schedule_unit_status_to_running(int schedule_unit_index,int s
 	if(total_schedule_unit_array[schedule_unit_index].schedule_unit_type==0)
 	{
 		t_running_job_list = running_job_list;
-		while(t_running_job_list!=NULL)
+		while(t_running_job_list != NULL)
 		{
 			if(t_running_job_list->job_id==total_schedule_unit_array[schedule_unit_index].job_id)
 			{
@@ -358,7 +355,7 @@ static void change_schedule_unit_status_to_running(int schedule_unit_index,int s
 			}
 			t_running_job_list = t_running_job_list->next;
 		}
-		if(t_running_job_list==NULL)
+		if(t_running_job_list == NULL)
 		{
 			printf("change_schedule_unit_status:cannot find job description 1 !\n");
 			log_error("change_schedule_unit_status:cannot find job description 1 !\n");
@@ -445,7 +442,7 @@ static void init_tree_element(struct job_description_element *job,int schedule_u
 static void rank_schedule_unit()
 {
 	struct schedule_unit_description_element t;
-	int i,j;
+	int i, j;
 /*
 	for(i=0;i<total_schedule_unit_num-1;i++)
 	{
@@ -536,56 +533,51 @@ static void update_a_job_priority(struct job_description_element *t)
 
 		start_node = (int *)malloc(DAG_node_num * sizeof(int));
 		node_b_level = (int *)malloc(DAG_node_num * sizeof(int));
-		//0 and 1 can use memset to initialize
+		//0 and -1 can use memset to initialize
 		memset(node_b_level, -1, DAG_node_num * sizeof(int));
 
 		select_start_node(start_node);
 
+		longest = -1;
 		for(i = 0; i < DAG_node_num; i++)
 		{
-			if(start_node[i]==1)
+			if(start_node[i] == 1)
 			{
 				node_b_level[i] = calc_longest_path(i);
+				if(longest < node_b_level[i])
+				{
+					longest = node_b_level[i];
+				}
 			}
 		}
-
-		longest = -1;
-
-		for(i = 0; i < DAG_node_num; i++)
-		{
-			if(longest < node_b_level[i])
-			{
-				longest = node_b_level[i];
-			}
-		}
-
 
 		//根据生成的有向无环图图的数据和找到的起始节点来设置子作业的优先级
-		for(i=0;i<DAG_node_num;i++)
+		for(i = 0; i < DAG_node_num; i++)
 		{
-			if(start_node[i]==1)
+			if(start_node[i] == 1)
 			{
-				if((float)node_b_level[i]<0.6*(float)longest)
+				//TODO 0.6 should be a conf data
+				if((float)node_b_level[i] < 0.6 * (float)longest)
 				{
 					t->job.normal_sub_task_description_array[i].priority = 1;
-					if((t->job.normal_sub_task_description_array[i].sub_pack_level)!=0)
+					if((t->job.normal_sub_task_description_array[i].sub_pack_level) != 0)
 					{
-						change_sub_pack_priority(t->job.normal_sub_task_description_array[i].root,1);
+						change_sub_pack_priority(t->job.normal_sub_task_description_array[i].root, 1);
 					}
 				}
 				else
 				{
 					t->job.normal_sub_task_description_array[i].priority = 2;
-					if((t->job.normal_sub_task_description_array[i].sub_pack_level)!=0)
+					if((t->job.normal_sub_task_description_array[i].sub_pack_level) != 0)
 					{
-						change_sub_pack_priority(t->job.normal_sub_task_description_array[i].root,2);
+						change_sub_pack_priority(t->job.normal_sub_task_description_array[i].root, 2);
 					}
 				}
 			}
 		}
 
 
-		for(i=0;i<DAG_node_num;i++)
+		for(i = 0; i < DAG_node_num; i++)
 		{
 			free(DAG[i]);
 		}
@@ -599,22 +591,22 @@ static void update_a_job_priority(struct job_description_element *t)
 /**
  * 逐层递归设置优先级，优先级别与上层优先级别相同
  */
-static void change_sub_pack_priority(struct sub_pack_description_tree_element *t,int priority)
+static void change_sub_pack_priority(struct sub_pack_description_tree_element *t, int priority)
 {
-	int i;
-
-	if(t==NULL)
+	if(t == NULL)
 	{
 		return;
 	}
 
+	int i;
+
 	t->parallel_sub_task_description.priority = priority;
 
-	if(t->child_created==1)
+	if(t->child_created == 1)
 	{
-		for(i=0;i<t->parallel_sub_task_description.child_num;i++)
+		for(i = 0; i < t->parallel_sub_task_description.child_num; i++)
 		{
-			change_sub_pack_priority(&(t->sub_pack_description_tree[i]),priority);
+			change_sub_pack_priority(&(t->sub_pack_description_tree[i]), priority);
 		}
 	}
 }
@@ -654,7 +646,7 @@ static int construct_DAG(struct job_description_element *t)
 		else if(t->job.normal_sub_task_description_array[i].status == RUNNING)
 		{
 			n_time = time(NULL);
-
+			//exe_time == 0 means sub task exe fail ?
 			if(t->job.normal_sub_task_description_array[i].prime_sub_task_description.exe_time == 0)
 			{
 				construct_fail_flag = 1;
@@ -719,12 +711,13 @@ static void select_start_node(int *start_node)
 {
 	int i, j;
 
-	/*TODO I have thought about this but I don't know whether this is logical right*/
+	/*TODO I have optimized here but I don't know whether this is logical right*/
+	//just check in degree
 	for(i = 0; i < DAG_node_num; i++){
 		start_node[i] = 1;
-		for(j = 0; j < i; j++)
+		for(j = 0; j < DAG_node_num/*i?*/; j++)
 		{
-			if(DAG[j][i] != 0)
+			if(DAG[j][i] != 0 && i != j)
 			{
 				start_node[i] = 0;
 				break;
@@ -743,12 +736,12 @@ static int calc_longest_path(int start_node_index)
 	int longest;
 	int i;
 
-	if(start_node_index==DAG_node_num-1)
+	if(start_node_index == DAG_node_num - 1)
 	{
 		return 0;
 	}
 
-	for(i = 0; i < DAG_node_num; i++)
+	for(i = start_node_index; i < DAG_node_num; i++)
 	{
 		path_len[i] = -1;
 	}
@@ -762,15 +755,15 @@ static int calc_longest_path(int start_node_index)
 	}
 
 	longest = -1;
-	for(i=0;i<DAG_node_num;i++)
+	for(i = start_node_index; i < DAG_node_num; i++)
 	{
-		if(longest<path_len[i])
+		if(longest < path_len[i])
 		{
 			longest = path_len[i];
 		}
 	}
 
-	assert(longest>-1);
+	assert(longest > -1);
 
 	return longest;
 }
@@ -779,47 +772,46 @@ static void init_sub_cluster_rank_array()
 {
 	struct sub_cluster_status_list_element *t_sub_cluster_list;
 	struct schedule_unit_priority_list_element *t_sub_unit_priority_list;
-	int i;
+	int i, j;
 
 	sub_cluster_rank_array_num = 0;
 
 	pthread_mutex_lock(&sub_cluster_list_m_lock);
-			
 	t_sub_cluster_list = sub_cluster_list;
-	while(t_sub_cluster_list!=NULL)
-	{
-		sub_cluster_rank_array_num ++;
-		sub_cluster_rank_array = (struct sub_cluster_rank_array_element *)realloc(sub_cluster_rank_array,sub_cluster_rank_array_num*sizeof(struct sub_cluster_rank_array_element));
-		sub_cluster_rank_array[sub_cluster_rank_array_num-1].sub_cluster_id = t_sub_cluster_list->sub_cluster_id;
-		sub_cluster_rank_array[sub_cluster_rank_array_num-1].sub_machine_num = t_sub_cluster_list->sub_machine_num;
-		sub_cluster_rank_array[sub_cluster_rank_array_num-1].pridict_status = t_sub_cluster_list->sub_cluster_description;
-		sub_cluster_rank_array[sub_cluster_rank_array_num-1].total_sub_task_num = 0;
-		for(i=0;i<2;i++)
-		{
-			sub_cluster_rank_array[sub_cluster_rank_array_num-1].priority_task_num[i] = 0;
-		}
-
-		t_sub_unit_priority_list = t_sub_cluster_list->schedule_unit_priority_list;
-
-		while(t_sub_unit_priority_list!=NULL)
-		{
-			sub_cluster_rank_array[sub_cluster_rank_array_num-1].total_sub_task_num += t_sub_unit_priority_list->schedule_unit_num;
-			sub_cluster_rank_array[sub_cluster_rank_array_num-1].priority_task_num[t_sub_unit_priority_list->priority-1] += t_sub_unit_priority_list->schedule_unit_num;
-
-			t_sub_unit_priority_list = t_sub_unit_priority_list->next;
-		}
-		sub_cluster_rank_array[sub_cluster_rank_array_num-1].score = 0;
-
-		t_sub_cluster_list = t_sub_cluster_list->next;
+	struct sub_cluster_status_list_element *tmp_iterator = sub_cluster_list;
+	while(tmp_iterator != NULL){
+		sub_cluster_rank_array_num++;
+		tmp_iterator = tmp_iterator->next;
 	}
 
+	sub_cluster_rank_array = (sub_cluster_rank_array_element *)malloc(sub_cluster_rank_array_num * sizeof(sub_cluster_rank_array_element));
+	//TODO malloc fail
+	for(j = 0; j < sub_cluster_rank_array_num; j++){
+		sub_cluster_rank_array[j].sub_cluster_id = t_sub_cluster_list->sub_cluster_id;
+		sub_cluster_rank_array[j].sub_machine_num = t_sub_cluster_list->sub_machine_num;
+		sub_cluster_rank_array[j].pridict_status = t_sub_cluster_list->sub_cluster_description;
+		sub_cluster_rank_array[j].total_sub_task_num = 0;
+		for(i = 0; i < 2; i++)
+		{
+			sub_cluster_rank_array[j].priority_task_num[i] = 0;
+		}
+		t_sub_unit_priority_list = t_sub_cluster_list->schedule_unit_priority_list;
+		while(t_sub_unit_priority_list != NULL)
+		{
+			sub_cluster_rank_array[j].total_sub_task_num += t_sub_unit_priority_list->schedule_unit_num;
+			sub_cluster_rank_array[j].priority_task_num[t_sub_unit_priority_list->priority-1] += t_sub_unit_priority_list->schedule_unit_num;
+			t_sub_unit_priority_list = t_sub_unit_priority_list->next;
+		}
+		sub_cluster_rank_array[j].score = 0;
+		t_sub_cluster_list = t_sub_cluster_list->next;
+	}
 	pthread_mutex_unlock(&sub_cluster_list_m_lock);
 }
 
 static int select_sub_cluster(int schedule_unit_index)
 {
 	struct sub_cluster_status_list_element *t_sub_cluster_list;
-	struct sub_cluster_rank_array_element t;
+	sub_cluster_rank_array_element t;
 	int weight_int[3];
 	float weight[3];
 	int ret;
@@ -829,28 +821,28 @@ static int select_sub_cluster(int schedule_unit_index)
 	weight_int[1] = total_schedule_unit_array[schedule_unit_index].prime_sub_task_description.weight[1];
 	weight_int[2] = total_schedule_unit_array[schedule_unit_index].prime_sub_task_description.weight[2];
 
-	weight[0] = (float)weight_int[0]/(float)(weight_int[0]+weight_int[1]+weight_int[2]);
-	weight[1] = (float)weight_int[1]/(float)(weight_int[0]+weight_int[1]+weight_int[2]);
-	weight[2] = (float)weight_int[2]/(float)(weight_int[0]+weight_int[1]+weight_int[2]);
+	weight[0] = (float)weight_int[0] / (float)(weight_int[0] + weight_int[1] + weight_int[2]);
+	weight[1] = (float)weight_int[1] / (float)(weight_int[0] + weight_int[1] + weight_int[2]);
+	weight[2] = (float)weight_int[2] / (float)(weight_int[0] + weight_int[1] + weight_int[2]);
 
-	for(i=0;i<sub_cluster_rank_array_num;i++)
+	for(i = 0; i < sub_cluster_rank_array_num; i++)
 	{
-		sub_cluster_rank_array[i].score = weight[0]*(float)sub_cluster_rank_array[i].pridict_status.average_CPU_free;
-		sub_cluster_rank_array[i].score += weight[1]*(float)sub_cluster_rank_array[i].pridict_status.average_memory_free;
-		sub_cluster_rank_array[i].score += weight[2]*(float)sub_cluster_rank_array[i].pridict_status.average_network_free;
+		sub_cluster_rank_array[i].score = weight[0] * (float)sub_cluster_rank_array[i].pridict_status.average_CPU_free;
+		sub_cluster_rank_array[i].score += weight[1] * (float)sub_cluster_rank_array[i].pridict_status.average_memory_free;
+		sub_cluster_rank_array[i].score += weight[2] * (float)sub_cluster_rank_array[i].pridict_status.average_network_free;
 //		printf("CPU: %d,mem: %d,net: %d\n",sub_cluster_rank_array[i].pridict_status.average_CPU_free,sub_cluster_rank_array[i].pridict_status.average_memory_free,sub_cluster_rank_array[i].pridict_status.average_network_free);
 	}
 
-	//冒泡排序。。。
-	for(i=0;i<sub_cluster_rank_array_num-1;i++)
+	//冒泡排序。。。 fucking bubble sort
+	for(i = 0; i < sub_cluster_rank_array_num - 1; i++)
 	{
-		for(j=0;j<sub_cluster_rank_array_num-1-1-i;j++)
+		for(j = 0; j < sub_cluster_rank_array_num - 1 - 1 - i; j++)
 		{
-			if(sub_cluster_rank_array[j].score<sub_cluster_rank_array[j+1].score)
+			if(sub_cluster_rank_array[j].score < sub_cluster_rank_array[j + 1].score)
 			{
 				t = sub_cluster_rank_array[j];
-				sub_cluster_rank_array[j] = sub_cluster_rank_array[j+1];
-				sub_cluster_rank_array[j+1] = t;
+				sub_cluster_rank_array[j] = sub_cluster_rank_array[j + 1];
+				sub_cluster_rank_array[j + 1] = t;
 			}
 		}
 	}
@@ -858,19 +850,19 @@ static int select_sub_cluster(int schedule_unit_index)
 	ret = 0;
 
 	//选择一个sub_cluster来运行这个unit，是否根据机器的数量来判定？？
-	for(i=0;i<sub_cluster_rank_array_num;i++)
+	for(i = 0; i < sub_cluster_rank_array_num; i++)
 	{
 //		printf("score = %d!!!!!!!!\n",sub_cluster_rank_array[i].score);
-		if(sub_cluster_rank_array[i].score<100)
+		if(sub_cluster_rank_array[i].score < 100)
 		{
 			break;
 		}
-		if((sub_cluster_rank_array[i].score<400)&&(total_schedule_unit_array[schedule_unit_index].priority<2))
+		if((sub_cluster_rank_array[i].score < 400) && (total_schedule_unit_array[schedule_unit_index].priority < 2))
 		{
 			break;
 		}
 
-		if(sub_cluster_rank_array[i].sub_machine_num<0.5*(float)total_schedule_unit_array[schedule_unit_index].machine_num)
+		if(sub_cluster_rank_array[i].sub_machine_num < 0.5 * (float)total_schedule_unit_array[schedule_unit_index].machine_num)
 		{
 			continue;
 		}
@@ -881,19 +873,19 @@ static int select_sub_cluster(int schedule_unit_index)
 		}
 	}
 	//在这里新建一个sub_cluster，在没有合适的sub_cluster的时候
-	if(ret==0)
+	if(ret == 0)
 	{
-		ret = try_to_create_sub_cluster(total_schedule_unit_array[schedule_unit_index].machine_num,schedule_unit_index);
+		ret = try_to_create_sub_cluster(total_schedule_unit_array[schedule_unit_index].machine_num, schedule_unit_index);
 		//从sub_cluster_list加入到sub_cluster_rank_array
-		if(ret>0)
+		if(ret > 0)
 		{
 			sub_cluster_rank_array_num++;
-			sub_cluster_rank_array = (struct sub_cluster_rank_array_element *)realloc(sub_cluster_rank_array,sub_cluster_rank_array_num*sizeof(struct sub_cluster_rank_array_element));
+			sub_cluster_rank_array = (sub_cluster_rank_array_element *)realloc(sub_cluster_rank_array, sub_cluster_rank_array_num * sizeof(sub_cluster_rank_array_element));
 
 			t_sub_cluster_list = sub_cluster_list;
-			while(t_sub_cluster_list!=NULL)
+			while(t_sub_cluster_list != NULL)
 			{
-				if(t_sub_cluster_list->sub_cluster_id==ret)
+				if(t_sub_cluster_list->sub_cluster_id == ret)
 				{
 					break;
 				}
@@ -1041,16 +1033,12 @@ void *master_scheduler(void *arg)
 	master_scheduler_init();
 	while(1)
 	{
-		update_priority();// 决定任务的优先级，数越高，优先级越大
-
-		select_schedule_unit();//决定真正在调度周期内打算调度的任务，构建了那个无敌大数组
-
-		rank_schedule_unit();//对打算调度的任务的优先级排序
-
-		assign_schedule_unit();//给任务选择一个子群去执行,若没有子群,则建立子群.将调度单元分配出去，将分配出去的调度单元状态更改
-		reset_total_schedule_unit();//把那个total_schedule_unit_array无敌大数组释放了！！！
-
-		log_main_master(running_job_num);//好吧，写日志暂且不管了
+		update_priority(); 					//update the tasks priority
+		select_schedule_unit(); 			//决定真正在调度周期内打算调度的任务，构建了那个无敌大数组
+		rank_schedule_unit();				//对打算调度的任务的优先级排序
+		assign_schedule_unit();				//给任务选择一个子群去执行, 若没有子群, 则建立子群.将调度单元分配出去， 将分配出去的调度单元状态更改
+		reset_total_schedule_unit();		//把那个total_schedule_unit_array无敌大数组释放了！！！
+		log_main_master(running_job_num);	//好吧，写日志暂且不管了
 
 		if(all_job_finish == 1)
 		{

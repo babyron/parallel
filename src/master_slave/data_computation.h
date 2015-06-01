@@ -7,7 +7,7 @@ char master_ip[16];
 volatile int sub_master_comm_id; //设置成全局变量，多个线程可以进行访问
 char local_ip[16];
 
-struct machine_description_element local_machine_status;
+
 struct waiting_schedule_list_element *waiting_schedule_list;
 struct schedule_list_element *schedule_list;
 struct schedule_unit_status_list_element *schedule_unit_status_list;
