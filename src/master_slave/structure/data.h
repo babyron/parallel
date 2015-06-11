@@ -17,7 +17,7 @@
  */
 typedef enum
 {
-	SUB_CLUSTER_HEART_BEAT,
+	SUB_CLUSTER_HEART_BEAT, //子群心跳信息
 	JOB_SUBMIT,
 	SCHEDULE_UNIT_ASSIGN,
 	SCHEDULE_UNIT_FINISH,
@@ -56,7 +56,7 @@ typedef enum
 	FREE_MACHINE,
 	COMPUTATION_MACHINE,
 	SUB_MASTER_MACHINE,
-	HALF_SUB_MASTER_MACHINE,//当主节点刚任命一个子节点为sub_master时设为此状态，当将该节点设为计算节点时状态改为sub_master
+	HALF_SUB_MASTER_MACHINE, //当主节点刚任命一个子节点为sub_master时设为此状态，当将该节点设为计算节点时状态改为sub_master
 	UNAVAILABLE_MACHINE
 }machine_role_t;
 
@@ -178,17 +178,17 @@ struct parallel_sub_task_description_element
 
 /**
  * 用于记录父子关系
- * @sub_pack_description_tree:是个数组，访问按下标访问（好吧，不是指针数组）
- * @parallel_sub_task_description:存放了这层任务的信息
+ * @sub_pack_description_tree: 是个数组，访问按下标访问（好吧，不是指针数组）
+ * @parallel_sub_task_description: 存放了这层任务的信息
  */
-struct sub_pack_description_tree_element
+typedef struct sub_pack_description_tree_element
 {
 	int sub_pack_b_level;		//b-level   0:is sub leaf 1:children are leaf
 	int child_created;
 	struct parallel_sub_task_description_element parallel_sub_task_description;
 
 	struct sub_pack_description_tree_element *sub_pack_description_tree;
-};
+}sub_pack_description_tree_element;
 
 /**
  * DAG:Directed Acyclic Graph，有向无环图
@@ -254,15 +254,15 @@ struct machine_description_element
 	int memory_swap;
 };
 
-struct machine_status_array_element
+typedef struct machine_status_array_element
 {
 	int machine_id;
 	int comm_id;
 	int sub_master_id;
 	struct machine_description_element machine_description;
-	int machine_status;	 //0:unavailable 1:available not in cluster 2.in sub cluster
+	int machine_status;	 //0:unavailable 1:available not in cluster 2.in sub cluster why not enum ?
 	time_t last_heart_beat_time;
-};
+}machine_status_array_element;
 
 struct sub_cluster_description_element
 {
@@ -281,20 +281,20 @@ struct sub_cluster_description_element
 /**
  * 用于记录集群上调度单元的优先级
  */
-struct schedule_unit_priority_list_element
+typedef struct schedule_unit_priority_list_element
 {
 	int schedule_unit_type;
 	int job_id;
 	int top_id;
-	int parent_id[10];//父节点的id编号，最大为9位
+	int parent_id[10];	//父节点的id编号，最大为9位
 	int schedule_unit_num;
 
 	int priority;
 
 	struct schedule_unit_priority_list_element *next;
-};
+}schedule_unit_priority_list_element;
 
-struct sub_cluster_status_list_element
+typedef struct sub_cluster_status_list_element
 {
 	int sub_cluster_id;
 	int sub_master_id;
@@ -308,7 +308,7 @@ struct sub_cluster_status_list_element
 	time_t last_heart_beat_time;
 
 	struct sub_cluster_status_list_element *next;
-};
+}sub_cluster_status_list_element;
 
 struct p_sub_cluster_status_array_element
 {
@@ -338,7 +338,8 @@ typedef struct schedule_unit_description_element
 	char **args;
 
 }schedule_unit_description_element;
-struct schedule_unit_status_list_element
+
+typedef struct schedule_unit_status_list_element
 {
 	int schedule_unit_type;
 
@@ -359,15 +360,15 @@ struct schedule_unit_status_list_element
 	char **ret_args;
 
 	struct schedule_unit_status_list_element *next;
-};
+}schedule_unit_status_list_element;
 
-struct server_arg_element
+typedef struct server_arg_element
 {
 	MPI_Status status;
 	char *msg;
-};
+}server_arg_element;
 
-struct waiting_schedule_list_element
+typedef struct waiting_schedule_list_element
 {
 	int type;
 	struct prime_sub_task_description_element prime_sub_task_description;
@@ -377,7 +378,7 @@ struct waiting_schedule_list_element
 	int priority;
 
 	struct waiting_schedule_list_element *next;
-};
+}waiting_schedule_list_element;
 
 struct schedule_list_element
 {

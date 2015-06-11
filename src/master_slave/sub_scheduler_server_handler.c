@@ -74,31 +74,31 @@ void *sub_scheduler_server_handler(void *arg)
 	switch(msg_type_sub_scheduler(final))
 	{
 		case SCHEDULE_UNIT_ASSIGN:
-			schedule_unit_assign_handler(comm_source,ack_tag,final);
+			schedule_unit_assign_handler(comm_source, ack_tag, final);
 			printf("msg : schedule unit assign\n");
 			break;
 		case MACHINE_HEART_BEAT:
-			machine_heart_beat_s_handler(comm_source,ack_tag,final);
+			machine_heart_beat_s_handler(comm_source, ack_tag, final);
 			printf("msg : machine heart beat_s\n");
 			break;
 		case REGISTRATION_S://在这里处理注册的计算节点
-			registration_s_handler(comm_source,ack_tag,final);
+			registration_s_handler(comm_source, ack_tag, final);
 			printf("msg : registration s\n");
 			break;
 		case SUB_TASK_FINISH:
-			sub_task_finish_handler(comm_source,ack_tag,final);
+			sub_task_finish_handler(comm_source, ack_tag, final);
 			printf("msg : sub task finish\n");
 			break;
 		case CHILD_CREATE:
-			child_create_c_to_s_handler(comm_source,ack_tag,final);
+			child_create_c_to_s_handler(comm_source, ack_tag, final);
 			printf("msg : child create c_to_s\n");
 			break;
 		case CHILD_WAIT_ALL:
-			child_wait_all_c_to_s_handler(comm_source,ack_tag,final);
+			child_wait_all_c_to_s_handler(comm_source, ack_tag, final);
 			printf("msg : child wait all c_to_s\n");
 			break;
 		case CHILD_WAKE_UP_ALL:
-			child_wake_up_all_m_to_s_handler(comm_source,ack_tag,final);
+			child_wake_up_all_m_to_s_handler(comm_source, ack_tag, final);
 			printf("msg : child wake up all m_to_s\n");
 			break;
 /*
@@ -108,7 +108,7 @@ void *sub_scheduler_server_handler(void *arg)
 			break;
 */
 		case SUB_CLUSTER_DESTROY:
-			sub_cluster_destroy_handler(comm_source,ack_tag,final);
+			sub_cluster_destroy_handler(comm_source, ack_tag, final);
 			printf("msg : sub cluster destroy\n");
 			break;
 		default:
@@ -453,7 +453,7 @@ void child_create_c_to_s_handler(int comm_source,int ack_tag,char *arg)
 	free(t_arg);
 }
 
-void sub_task_finish_handler(int comm_source,int ack_tag,char *arg)
+void sub_task_finish_handler(int comm_source, int ack_tag, char *arg)
 {
 //	unit complelte
 //	send sub unit finish if needed;
@@ -470,55 +470,49 @@ void sub_task_finish_handler(int comm_source,int ack_tag,char *arg)
 	char *t_id;
 	char *save_ptr;
 	int success;
-	int i;
 
-	i = 0;
-	while(arg[i]!=';')
-	{
-		i++;
-	}
-	i++;
+	int i = 0;
+	while(arg[i++] != ';');
 
-	t_arg = strdup(arg+i);
+	t_arg = strdup(arg + i);
 
-	send_ack_msg(comm_source,ack_tag,"");
+	send_ack_msg(comm_source, ack_tag, "");
 
-	parameter = strtok_r(t_arg,",",&save_ptr);
+	parameter = strtok_r(t_arg, ",", &save_ptr);
 	type = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	job_id = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	top_id = atoi(parameter);
 
-	for(i=0;i<10;i++)
+	for(i = 0; i < 10; i++)
 	{
-		parameter = strtok_r(NULL,"_",&save_ptr);
+		parameter = strtok_r(NULL, "_", &save_ptr);
 		id[i] = atoi(parameter);
 	}
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	ret_arg = strdup(parameter);
 
 	free(t_arg);
 
-	delete_element_from_schedule_list(type,job_id,top_id,id);
+	delete_element_from_schedule_list(type, job_id, top_id, id);
 
-	if(type==1)
+	if(type == 1)
 	{
-		add_ret_arg_to_schedule_unit_status_list(job_id,id,ret_arg);
-
+		add_ret_arg_to_schedule_unit_status_list(job_id, id, ret_arg);
 	}
 
-	ids = delete_schedule_unit_status_element_get_ids(type,job_id,top_id,id,&schedule_unit_num,&success,&ret_args);		//should get args also
+	ids = delete_schedule_unit_status_element_get_ids(type, job_id, top_id, id, &schedule_unit_num, &success, &ret_args);		//should get args also
 
-	if(success==1)
+	if(success == 1)
 	{
-		API_schedule_unit_finish(type,schedule_unit_num,job_id,top_id,ret_arg,ids,ret_args);
-		if(type==1)
+		API_schedule_unit_finish(type, schedule_unit_num, job_id, top_id, ret_arg, ids, ret_args);
+		if(type == 1)
 		{
-			for(i=0;i<schedule_unit_num;i++)
+			for(i = 0; i < schedule_unit_num; i++)
 			{
 				free(ret_args[i]);
 				free(ids[i]);
@@ -527,43 +521,41 @@ void sub_task_finish_handler(int comm_source,int ack_tag,char *arg)
 			free(ids);
 		}
 	}
-
 	free(ret_arg);
 }
 
-void add_ret_arg_to_schedule_unit_status_list(int job_id,int id[10],char *ret_arg)
+void add_ret_arg_to_schedule_unit_status_list(int job_id, int id[10], char *ret_arg)
 {
 	struct schedule_unit_status_list_element *t_schedule_unit_status_list;
-	int i,j;
+	int i, j;
 
 	pthread_mutex_lock(&schedule_unit_status_list_m_lock);
 
 	t_schedule_unit_status_list = schedule_unit_status_list;
-	while(t_schedule_unit_status_list!=NULL)
+	while(t_schedule_unit_status_list != NULL)
 	{
-		if((t_schedule_unit_status_list->job_id==job_id)&&(t_schedule_unit_status_list->schedule_unit_type==1))
+		if((t_schedule_unit_status_list->job_id == job_id) && (t_schedule_unit_status_list->schedule_unit_type == 1))
 		{
-			for(i=0;i<t_schedule_unit_status_list->schedule_unit_num;i++)
+			for(i = 0; i < t_schedule_unit_status_list->schedule_unit_num; i++)
 			{
-				for(j=0;j<10;j++)
+				for(j = 0; j < 10; j++)
 				{
-					if(t_schedule_unit_status_list->ids[i][j]!=id[j])
+					if(t_schedule_unit_status_list->ids[i][j] != id[j])
 					{
 						break;
 					}
 				}
-				if(j==10)
+				if(j == 10)
 				{
 					break;
 				}
 			}
 
-			if(i<t_schedule_unit_status_list->schedule_unit_num)
+			if(i < t_schedule_unit_status_list->schedule_unit_num)
 			{
 				t_schedule_unit_status_list->ret_args[i] = strdup(ret_arg);
 			}
 		}
-
 		t_schedule_unit_status_list = t_schedule_unit_status_list->next;
 	}
 
@@ -661,11 +653,10 @@ void registration_s_handler(int comm_source,int ack_tag,char *arg)
 
 }
 
-void schedule_unit_assign_handler(int comm_source,int ack_tag,char *arg)
+void schedule_unit_assign_handler(int comm_source, int ack_tag, char *arg)
 {
-	struct waiting_schedule_list_element *t_head,*t,*t_waiting_schedule_list;
+	struct waiting_schedule_list_element *t_head, *t, *t_waiting_schedule_list;
 	struct prime_sub_task_description_element prime_sub_task_description;
-	char *t_arg,*tt_arg;
 	char *parameter;
 	char *save_ptr;
 	int sub_unit_num;
@@ -673,76 +664,71 @@ void schedule_unit_assign_handler(int comm_source,int ack_tag,char *arg)
 	int job_id;
 	int top_id;
 	int priority;
-	int i;
 
-	i = 0;
-
-	while(arg[i]!=';')
+	int i = 0;
+	while(arg[i] != ';')
 	{
 		i++;
 	}
-
 	i++;
 
-	t_arg = strdup(arg+i);
-	tt_arg = strdup(arg+i);
+	char *t_arg = strdup(arg + i);
+	char *tt_arg = strdup(arg + i);
 
-	send_ack_msg(comm_source,ack_tag,"");
-
+	send_ack_msg(comm_source, ack_tag, "");
 
 	add_to_schedule_unit_status_list(t_arg);
-
 
 //	t = (struct waiting_schedule_list *)malloc(sizeof(struct waiting_schedule_list));
 //	t->next = NULL;
 
-	parameter = strtok_r(tt_arg,",",&save_ptr);
+	parameter = strtok_r(tt_arg, ",", &save_ptr);
 
 	type = atoi(parameter);
 
-	read_prime_sub_task_description(&prime_sub_task_description,&save_ptr);
+	read_prime_sub_task_description(&prime_sub_task_description, &save_ptr);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	sub_unit_num = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	job_id = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	top_id = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	priority = atoi(parameter);
 
-	if(type==1)
+	if(type == 1)
 	{
 		t_head = NULL;
-		for(i=0;i<sub_unit_num;i++)
+		for(i = 0; i < sub_unit_num; i++)
 		{
-			t = (struct waiting_schedule_list_element *)malloc(sizeof(struct waiting_schedule_list_element));
+			t = (waiting_schedule_list_element *)malloc(sizeof(waiting_schedule_list_element));
 			t->next = t_head;
 			t_head = t;
 		}
 
 		t = t_head;
 
-		while(t!=NULL)
+		while(t != NULL)
 		{
 			t->type = type;
 			t->prime_sub_task_description = prime_sub_task_description;
 			t->job_id = job_id;
 			t->top_id = top_id;
 			t->priority = priority;
-			id_to_array(t->id,&save_ptr);
+			id_to_array(t->id, &save_ptr);
 			t = t->next;
 		}
 
 		t = t_head;
 
-		while(t!=NULL)
+		while(t != NULL)
 		{
-			parameter = strtok_r(NULL,"_",&save_ptr);
-			strcpy(t->prime_sub_task_description.arg,parameter);
+			parameter = strtok_r(NULL,"_", &save_ptr);
+			strcpy(t->prime_sub_task_description.arg, parameter);
 			t = t->next;
 		}
 	}
@@ -755,18 +741,15 @@ void schedule_unit_assign_handler(int comm_source,int ack_tag,char *arg)
 		t_head->job_id = job_id;
 		t_head->top_id = top_id;
 		t_head->priority = priority;
-		for(i=0;i<10;i++)
+		for(i = 0; i < 10; i++)
 		{
 			t_head->id[i] = 0;
 		}
 		t_head->next = NULL;
 	}
-
 //	running_schedule_list_modify_priority(&save_ptr);
-
 	pthread_mutex_lock(&waiting_schedule_list_m_lock);
-
-	if(waiting_schedule_list==NULL)
+	if(waiting_schedule_list == NULL)
 	{
 		waiting_schedule_list = t_head;
 	}
@@ -774,14 +757,13 @@ void schedule_unit_assign_handler(int comm_source,int ack_tag,char *arg)
 	{
 		t_waiting_schedule_list = waiting_schedule_list;
 
-		while(t_waiting_schedule_list->next!=NULL)
+		while(t_waiting_schedule_list->next != NULL)
 		{
 			t_waiting_schedule_list = t_waiting_schedule_list->next;
 		}
 
 		t_waiting_schedule_list->next = t_head;
 	}
-
 	pthread_mutex_unlock(&waiting_schedule_list_m_lock);
 
 	free(t_arg);
@@ -835,7 +817,7 @@ void running_schedule_list_modify_priority(char **save_ptr)
 		t_schedule_list = schedule_list;
 		while(t_schedule_list!=NULL)
 		{
-			if((t_schedule_list->type==type)&&(t_schedule_list->job_id==job_id))
+			if((t_schedule_list->type == type)&&(t_schedule_list->job_id == job_id))
 			{
 				if(type==0)
 				{
@@ -1014,45 +996,45 @@ void id_to_array(int *id,char **save_ptr)
 	}
 }
 
-void read_prime_sub_task_description(struct prime_sub_task_description_element *prime_sub_task_description,char **save_ptr)
+void read_prime_sub_task_description(struct prime_sub_task_description_element *prime_sub_task_description, char **save_ptr)
 {
 	char *parameter;
 
-	parameter = strtok_r(NULL,",",save_ptr);
-	strcpy(prime_sub_task_description->sub_task_path,parameter);
+	parameter = strtok_r(NULL, ",", save_ptr);
+	strcpy(prime_sub_task_description->sub_task_path, parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
+	parameter = strtok_r(NULL, ",", save_ptr);
 	prime_sub_task_description->CPU_prefer = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
+	parameter = strtok_r(NULL, ",", save_ptr);
 	prime_sub_task_description->GPU_prefer = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
+	parameter = strtok_r(NULL, ",", save_ptr);
 	prime_sub_task_description->exe_time = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
+	parameter = strtok_r(NULL, ",", save_ptr);
 	prime_sub_task_description->exe_density = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
+	parameter = strtok_r(NULL, ",", save_ptr);
 	prime_sub_task_description->memory_demand = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
+	parameter = strtok_r(NULL, ",", save_ptr);
 	prime_sub_task_description->network_density = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
+	parameter = strtok_r(NULL, ",", save_ptr);
 	prime_sub_task_description->weight[0] = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
+	parameter = strtok_r(NULL, ",", save_ptr);
 	prime_sub_task_description->weight[1] = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
+	parameter = strtok_r(NULL, ",", save_ptr);
 	prime_sub_task_description->weight[2] = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
+	parameter = strtok_r(NULL, ",", save_ptr);
 	prime_sub_task_description->arg_type = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",save_ptr);
-	strcpy(prime_sub_task_description->arg,parameter);
+	parameter = strtok_r(NULL, ",", save_ptr);
+	strcpy(prime_sub_task_description->arg, parameter);
 }
 
 msg_t msg_type_sub_scheduler(char *msg)
@@ -1132,32 +1114,31 @@ msg_t msg_type_sub_scheduler(char *msg)
 
 void add_to_schedule_unit_status_list(const char *arg)
 {
-	struct schedule_unit_status_list_element *t_schedule_unit_status_list,*t;
+	schedule_unit_status_list_element *t_schedule_unit_status_list;
 	struct prime_sub_task_description_element prime_sub_task_description;
-	char *t_arg;
 	char *parameter;
 	char *save_ptr;
-	int i,j;
+	int i, j;
 
-	t_arg = strdup(arg);
+	char *t_arg = strdup(arg);
 
-	t = (struct schedule_unit_status_list_element *)malloc(sizeof(struct schedule_unit_status_list_element));
+	schedule_unit_status_list_element *t = (schedule_unit_status_list_element *)malloc(sizeof(schedule_unit_status_list_element));
 
-	parameter = strtok_r(t_arg,",",&save_ptr);
+	parameter = strtok_r(t_arg, ",", &save_ptr);
 	t->schedule_unit_type = atoi(parameter);
 
-	read_prime_sub_task_description(&prime_sub_task_description,&save_ptr);
+	read_prime_sub_task_description(&prime_sub_task_description, &save_ptr);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	t->schedule_unit_num = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	t->job_id = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	t->top_id = atoi(parameter);
 
-	parameter = strtok_r(NULL,",",&save_ptr);
+	parameter = strtok_r(NULL, ",", &save_ptr);
 	t->priority = atoi(parameter);
 
 	t->status = RUNNING;
@@ -1165,35 +1146,35 @@ void add_to_schedule_unit_status_list(const char *arg)
 	t->status_array = NULL;
 	t->ret_args = NULL;
 
-	if(t->schedule_unit_type==1)
+	if(t->schedule_unit_type == 1)
 	{
-		t->ids = (int **)malloc(t->schedule_unit_num*sizeof(int *));
-		for(i=0;i<t->schedule_unit_num;i++)
+		t->ids = (int **)malloc(t->schedule_unit_num * sizeof(int *));
+		for(i = 0; i < t->schedule_unit_num; i++)
 		{
-			t->ids[i] = (int *)malloc(10*sizeof(int));
+			t->ids[i] = (int *)malloc(10 * sizeof(int));
 		}
 
-		for(i=0;i<t->schedule_unit_num;i++)
+		for(i = 0; i < t->schedule_unit_num; i++)
 		{
-			for(j=0;j<10;j++)
+			for(j = 0; j < 10; j++)
 			{
-				parameter = strtok_r(NULL,"_",&save_ptr);
+				parameter = strtok_r(NULL, "_", &save_ptr);
 				t->ids[i][j] = atoi(parameter);
 			}
 		}
 
-		t->status_array = (status_t *)malloc(t->schedule_unit_num*sizeof(status_t));
+		t->status_array = (status_t *)malloc(t->schedule_unit_num * sizeof(status_t));
 
-		t->ret_args = (char **)malloc(t->schedule_unit_num*sizeof(char *));
+		t->ret_args = (char **)malloc(t->schedule_unit_num * sizeof(char *));
 
-		for(i=0;i<t->schedule_unit_num;i++)
+		for(i = 0; i < t->schedule_unit_num; i++)
 		{
 			t->status_array[i] = RUNNING;
 		}
 
-		for(i=0;i<t->schedule_unit_num;i++)
+		for(i = 0; i < t->schedule_unit_num; i++)
 		{
-			parameter = strtok_r(NULL,"_",&save_ptr);
+			parameter = strtok_r(NULL, "_", &save_ptr);
 		}
 	}
 
@@ -1362,39 +1343,39 @@ void delete_from_schedule_unit_status_list(struct schedule_unit_status_list_elem
 	}
 }
 
-void delete_element_from_schedule_list(int type,int job_id,int top_id,int id[10])
+void delete_element_from_schedule_list(int type, int job_id, int top_id, int id[10])
 {
-	struct schedule_list_element *t_schedule_list,*t;
+	assert(schedule_list != NULL);
+	assert((type == 0) || (type == 1));
+
+	struct schedule_list_element *t_schedule_list, *t;
 	int i;
 
 	pthread_mutex_lock(&schedule_list_m_lock);
 
-	assert(schedule_list);
-	assert((type==0)||(type==1));
-
 	t_schedule_list = schedule_list;
-	while(t_schedule_list!=NULL)
+	while(t_schedule_list != NULL)
 	{
-		if((type==t_schedule_list->type)&&(job_id==t_schedule_list->job_id))
+		if((type == t_schedule_list->type)&&(job_id == t_schedule_list->job_id))
 		{
-			if(type==0)
+			if(type == 0)
 			{
-				if(top_id==t_schedule_list->top_id)
+				if(top_id == t_schedule_list->top_id)
 				{
 					break;
 				}
 			}
 			else
 			{
-				for(i=0;i<10;i++)
+				for(i = 0; i < 10; i++)
 				{
-					if(id[i]!=t_schedule_list->id[i])
+					if(id[i] != t_schedule_list->id[i])
 					{
 						break;
 					}
 
 				}
-				if(i==10)
+				if(i == 10)
 				{
 					break;
 				}
@@ -1406,18 +1387,18 @@ void delete_element_from_schedule_list(int type,int job_id,int top_id,int id[10]
 
 	t = t_schedule_list;
 
-	assert(t);
+	assert(t != NULL);
 
-	if(t==schedule_list)
+	if(t == schedule_list)
 	{
 		schedule_list = schedule_list->next;
 	}
 	else
 	{
 		t_schedule_list = schedule_list;
-		while(t_schedule_list->next!=NULL)
+		while(t_schedule_list->next != NULL)
 		{
-			if(t_schedule_list->next==t)
+			if(t_schedule_list->next == t)
 			{
 				t_schedule_list->next = t->next;
 				break;

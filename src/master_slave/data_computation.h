@@ -1,4 +1,5 @@
 #include "time.h"
+#include "./structure/data.h"
 
 #ifndef	_DATA_COMPUTATION_H
 #define _DATA_COMPUTATION_H
@@ -6,7 +7,6 @@
 char master_ip[16];
 volatile int sub_master_comm_id; //设置成全局变量，多个线程可以进行访问
 char local_ip[16];
-
 
 struct waiting_schedule_list_element *waiting_schedule_list;
 struct schedule_list_element *schedule_list;
@@ -26,10 +26,6 @@ volatile int sub_scheduler_on;
 volatile int additional_sub_task_count;
 
 unsigned long int max_byte_per_prob_interval;
-
-float CPU_free_factor;
-float memory_free_factor;
-float network_free_factor;
 
 struct waiting_schedule_list_element *waiting_schedule_array;
 int waiting_schedule_array_num;
@@ -54,9 +50,7 @@ struct timeval last_sub_cluster_heart_beat_time;
 extern void *computation_server_handler(void *arg);
 extern void *sub_scheduler(void *arg);
 extern void *sub_scheduler_server_handler(void *arg);
-extern void *machine_heart_beat_daemon(void *arg);
 extern void *sub_cluster_heart_beat_daemon(void *arg);
-extern void *dynamic_info_get_daemon(void *arg);
 extern void send_sub_cluster_heart_beat();
 extern void send_machine_heart_beat();
 

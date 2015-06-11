@@ -1,1 +1,1 @@
-# parallel
+# a parallel computing framework

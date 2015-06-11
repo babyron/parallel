@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <sys/socket.h>
 #include <sys/msg.h>
 #include <sys/ipc.h>
 #include <sys/types.h>
@@ -11,7 +10,6 @@
 #include <string.h>
 #include <assert.h>
 #include <mpi.h>
-#include "./structure/data.h"
 #include "data_computation.h"
 #include "machine_status.h"
 #include "./common/api.h"
@@ -19,9 +17,7 @@
 #include "computation_server_handler.h"
 
 /*====================private declaration====================*/
-static char queue_recv_msg[38 + 6 + 1000 * 64 + 16];		//max child_num 1000
 
-static msg_t msg_type_computation(char *msg);
 static void sub_scheduler_assign_handler(int comm_source,int ack_tag,char *arg);
 static void computation_node_assign_handler(int comm_source,int ack_tag,char *arg);
 static void *sub_scheduler_server(void *arg);
@@ -35,13 +31,12 @@ static void child_wake_up_all_handler(int comm_source,int ack_tag,char *arg);
 static void add_element_to_sub_task_running_list(char *arg);
 static void delete_element_from_sub_task_running_list(char *arg);
 //void o_get_sub_task_handler(int comm_source,int ack_tag,char *arg);
-static void back_to_main_master_handler(int comm_source,int ack_tag,char *arg);
-static void o_mpi_sub_task_finish_handler(char *arg);
-static void o_mpi_child_create_handler(char *arg);
-static void o_mpi_child_wait_all_handler(char *arg);
+static void back_to_main_master_handler(int comm_source, int ack_tag, char *arg);
 
 /*====================private implementation====================*/
-static msg_t msg_type_computation(char *msg)
+
+//why don't u send msg_t !!!
+msg_t msg_type_computation(const char *msg)
 {
 	char type[64];
 	int i;
@@ -66,11 +61,12 @@ static msg_t msg_type_computation(char *msg)
 		}
 		else
 		{
-			type[i] = '\0';
 			break;
 		}
 	}
-	//TODO why don't use operation code?
+	type[i] = '\0';
+
+	//TODO why don't use int as operation code ?
 	if(!strcmp(type, "SUB_SCHEDULER_ASSIGN"))
 	{
 		return SUB_SCHEDULER_ASSIGN;
@@ -113,24 +109,17 @@ static msg_t msg_type_computation(char *msg)
 	}
 }
 
-static void sub_scheduler_assign_handler(int comm_source,int ack_tag,char *arg)
+static void sub_scheduler_assign_handler(int comm_source, int ack_tag, char *arg)
 {
 	pthread_attr_t attr;
 	void *ret_val;
 	char *t_arg;
 	int ret;
-	int i;
 
-	i = 0;
+	int i = 0;
+	while(arg[i++] != ';');
 
-	while(arg[i] != ';')
-	{
-		i++;
-	}
-
-	i++;
-
-	t_arg = strdup(arg+i);
+	t_arg = strdup(arg + i);
 
 	printf("arg = %s!\n",t_arg);
 
@@ -184,18 +173,11 @@ static void sub_scheduler_assign_handler(int comm_source,int ack_tag,char *arg)
 static void computation_node_assign_handler(int comm_source,int ack_tag,char *arg)
 {
 	char *t_arg;
-	int i;
 
-	i = 0;
+	int i = 0;
+	while(arg[i++] != ';');
 
-	while(arg[i]!=';')
-	{
-		i++;
-	}
-
-	i++;
-
-	t_arg = strdup(arg+i);
+	t_arg = strdup(arg + i);
 
 	pthread_mutex_lock(&local_machine_role_m_lock);
 	//？？这段代码表示什么意思，多个角色？？
@@ -324,11 +306,7 @@ static void sub_task_assign_handler(int comm_source, int ack_tag, char *arg)
 	char *parameter;
 
 	int i = 0;
-	while(arg[i] != ';')
-	{
-		i++;
-	}
-	i++;
+	while(arg[i++] != ';');
 
 	t_arg = strdup(arg+i);
 
@@ -456,14 +434,9 @@ static void child_wake_up_all_handler(int comm_source, int ack_tag, char *arg)
 	char *ret_arg;
 	char *parameter;
 	char *save_ptr;
-	int i;
 
-	i = 0;
-	while(arg[i] != ';')
-	{
-		i++;
-	}
-	i++;
+	int i = 0;
+	while(arg[i++] != ';');
 
 	t_arg = strdup(arg+i);
 
@@ -538,9 +511,12 @@ static void add_element_to_sub_task_running_list(char *arg)
 	free(t_arg);
 }
 
+
 static void delete_element_from_sub_task_running_list(char *arg)
 {
-	struct sub_task_running_list_element *t_sub_task_running_list,*t;
+	assert(sub_task_running_list != NULL);
+
+	struct sub_task_running_list_element *t_sub_task_running_list, *t;
 	char *t_arg;
 	char *parameter;
 	char *save_ptr;
@@ -549,8 +525,6 @@ static void delete_element_from_sub_task_running_list(char *arg)
 	int top_id;
 	int id[10];
 	int i;
-
-	assert(sub_task_running_list != NULL);
 
 	t_arg = strdup(arg);
 
@@ -576,7 +550,7 @@ static void delete_element_from_sub_task_running_list(char *arg)
 	{
 		if((type == t_sub_task_running_list->type) && (job_id == t_sub_task_running_list->job_id))
 		{
-			if(type==0)
+			if(type == 0)
 			{
 				if(top_id == t_sub_task_running_list->top_id)
 				{
@@ -593,7 +567,7 @@ static void delete_element_from_sub_task_running_list(char *arg)
 					}
 				}
 
-				if(i==10)
+				if(i == 10)
 				{
 					break;
 				}
@@ -603,11 +577,11 @@ static void delete_element_from_sub_task_running_list(char *arg)
 		t_sub_task_running_list = t_sub_task_running_list->next;
 	}
 
-	assert(t_sub_task_running_list!=NULL);
+	assert(t_sub_task_running_list != NULL);
 
 	t = t_sub_task_running_list;
 
-	if(t==sub_task_running_list)
+	if(t == sub_task_running_list)
 	{
 		sub_task_running_list = sub_task_running_list->next;
 		free(t);
@@ -616,9 +590,9 @@ static void delete_element_from_sub_task_running_list(char *arg)
 	{
 		t_sub_task_running_list = sub_task_running_list;
 
-		while(t_sub_task_running_list->next!=NULL)
+		while(t_sub_task_running_list->next != NULL)
 		{
-			if(t_sub_task_running_list->next==t)
+			if(t_sub_task_running_list->next == t)
 			{
 				t_sub_task_running_list->next = t->next;
 				free(t);
@@ -636,7 +610,7 @@ static void delete_element_from_sub_task_running_list(char *arg)
 	free(t_arg);
 }
 
-static void back_to_main_master_handler(int comm_source,int ack_tag,char *arg)
+static void back_to_main_master_handler(int comm_source, int ack_tag, char *arg)
 {
 	pthread_mutex_lock(&local_machine_role_m_lock);
 
@@ -644,25 +618,19 @@ static void back_to_main_master_handler(int comm_source,int ack_tag,char *arg)
 
 	pthread_mutex_unlock(&local_machine_role_m_lock);
 
-	send_ack_msg(comm_source,ack_tag,"");
+	send_ack_msg(comm_source, ack_tag, "");
 
 	API_registration_m(local_machine_status);
 }
 
-static void o_mpi_sub_task_finish_handler(char *arg)
+void o_mpi_sub_task_finish_handler(char *arg)
 {
 	char *t_arg;
-	int i;
 
-	i = 0;
-	while(arg[i]!=';')
-	{
-		i++;
-	}
+	int i = 0;
+	while(arg[i++] != ';');
 
-	i++;
-
-	t_arg = strdup(arg+i);
+	t_arg = strdup(arg + i);
 
 	delete_element_from_sub_task_running_list(t_arg);
 
@@ -673,17 +641,12 @@ static void o_mpi_sub_task_finish_handler(char *arg)
 	free(t_arg);
 }
 
-static void o_mpi_child_create_handler(char *arg)
+void o_mpi_child_create_handler(char *arg)
 {
 	char *t_arg;
-	int i;
 
-	i = 0;
-	while(arg[i]!=';')
-	{
-		i++;
-	}
-	i++;
+	int i = 0;
+	while(arg[i++] != ';');
 
 	t_arg = strdup(arg+i);
 
@@ -692,7 +655,7 @@ static void o_mpi_child_create_handler(char *arg)
 	free(t_arg);
 }
 
-static void o_mpi_child_wait_all_handler(char *arg)
+void o_mpi_child_wait_all_handler(char *arg)
 {
 	struct child_wait_all_list_element t_child_wait_all_list;
 	struct child_wait_all_list_element *t;
@@ -701,14 +664,9 @@ static void o_mpi_child_wait_all_handler(char *arg)
 	char *parameter;
 	char *save_ptr;
 	int len;
-	int i;
 
-	i = 0;
-	while(arg[i]!=';')
-	{
-		i++;
-	}
-	i++;
+	int i = 0;
+	while(arg[i++] != ';');
 
 	t_arg = strdup(arg+i);
 	tt_arg = strdup(arg+i);
@@ -759,66 +717,6 @@ static void o_mpi_child_wait_all_handler(char *arg)
 
 	free(t_arg);
 	free(tt_arg);
-}
-
-/**
- * 从消息队列中获取消息来处理本地进程的状态，这是在一个节点内的操作
- */
-void *local_msg_daemon(void *arg)
-{
-	char *final;
-	int msg_queue_id;
-	int msg_type;
-	int ret;
-
-	msg_type = MPI_LOCAL_DEAMON_MSG_TYPE;
-
-	msg_queue_id = msgget(MSG_QUEUE_KEY,IPC_CREAT|0666);//设置消息队列
-
-	while(1)
-	{
-		//接受消息队列中的消息？？msgsnd
-		ret = msgrcv(msg_queue_id,queue_recv_msg,sizeof(long int)+(72+60)*sizeof(char),msg_type,0);
-		if(ret==-1)
-		{
-			perror("msgrecv error!\n");
-			log_error("msgrecv error! local_msg_daemon\n");
-			exit(1);
-		}
-
-		final = strdup(queue_recv_msg+sizeof(long int));
-		printf("final_recv_msg = %s\n",final);
-
-		switch(msg_type_computation(final))
-		{
-			case SUB_TASK_FINISH:
-				o_mpi_sub_task_finish_handler(final);
-				printf("msg : out sub task finish\n");
-				break;
-			case CHILD_CREATE:
-				o_mpi_child_create_handler(final);
-				printf("msg : out child create\n");
-				break;
-			case CHILD_WAIT_ALL:
-				o_mpi_child_wait_all_handler(final);
-				printf("msg : out child wait all\n");
-				break;
-/*
-			case GET_SUB_TASK_IP:
-				printf("msg : out get sub task ip\n");
-				o_get_sub_task_handler(comm_source,ack_tag,final);
-				break;
-*/
-			default:
-				printf("unknown msg type!\n");
-				log_error("unknown msg type! local_msg_daemon\n");
-				exit(1);
-		}
-
-//		o_mpi_sub_task_finish_handler(final_recv_msg);
-
-		free(final);
-	}
 }
 
 void *computation_server_handler(void *arg)

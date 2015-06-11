@@ -35,16 +35,16 @@ void log_record_start_up()
 	FILE *fp;
 	char id_c[6];
 
-	strcpy(file_path,"./log/log.");
+	strcpy(file_path, "./log/log.");
 	itoa(id_c, global_machine_id);
 	strcat(file_path, id_c);
 
 	fp = fopen(file_path,"w");
 
-	fprintf(fp,"START_UP\n");
+	fprintf(fp, "START_UP\n");
 
-	fprintf(fp,"start_up_start_time$%ld$%d\n", (long)start_up_start_time, global_machine_id);
-	fprintf(fp,"start_up_finish_time$%ld$%d\n", (long)start_up_finish_time, global_machine_id);
+	fprintf(fp, "start_up_start_time$%ld$%d\n", (long)start_up_start_time, global_machine_id);
+	fprintf(fp, "start_up_finish_time$%ld$%d\n", (long)start_up_finish_time, global_machine_id);
 	fclose(fp);
 }
 

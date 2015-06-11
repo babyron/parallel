@@ -138,13 +138,13 @@ void send_recv_msg(int comm_source, int init_tag, msg_t msg_type, char *send_msg
 	length = strlen(send_msg) + strlen(msg_type_c) + 1;
 	itoa(parameter, length);
 	strcat(pre_msg, parameter);
-
 	strcat(pre_msg, ";");
 
 	ack_tag = get_a_tag();
 	itoa(parameter, ack_tag);
 	strcat(pre_msg, parameter);
 	//每次发送之前都要预先通知发送的类型以及发送数据的长度
+
 	MPI_Send(pre_msg, strlen(pre_msg) + 1, MPI_CHAR, comm_source, init_tag, MPI_COMM_WORLD);
 	strcpy(final_msg, msg_type_c);
 	strcat(final_msg, send_msg);

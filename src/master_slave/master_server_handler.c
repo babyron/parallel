@@ -125,7 +125,7 @@ void *master_server_handler(void * arg)
 	return NULL;
 }
 
-void machine_heart_beat_m_handler(int comm_source,int ack_tag,char *arg)
+void machine_heart_beat_m_handler(int comm_source, int ack_tag, char *arg)
 {
 	char *t_arg;
 	char *parameter;
@@ -1053,11 +1053,11 @@ int try_wake_up_normal_sub_task(struct job_description_element *t,int top_id,int
 	return 0;
 }
 
-int try_wake_up_sub_pack(struct job_description_element *t,int id[10],int *child_num,char ***ret_args)
+int try_wake_up_sub_pack(struct job_description_element *t, int id[10], int *child_num, char ***ret_args)
 {
 	struct sub_pack_description_tree_element *parent;
 	int p;
-	int i,j;
+	int i, j;
 
 	*ret_args = NULL;
 	*child_num = 0;
@@ -1065,19 +1065,19 @@ int try_wake_up_sub_pack(struct job_description_element *t,int id[10],int *child
 	parent = t->job.normal_sub_task_description_array[id[0]-1].root;
 
 	p = 1;
-	while(id[p]!=0)
+	while(id[p] != 0)
 	{
 		parent = &(parent->sub_pack_description_tree[id[p]-1]);
 		p++;
 	}
 
-	if(parent->child_created==0)
+	if(parent->child_created == 0)
 	{
 		printf("An idiot programmer waits all children before create them,hahaha.\n");
 	}
 	else
 	{
-		for(i=0;i<parent->parallel_sub_task_description.child_num;i++)
+		for(i = 0; i < parent->parallel_sub_task_description.child_num; i++)
 		{
 			if(parent->sub_pack_description_tree[i].parallel_sub_task_description.status!=FINISHED)
 			{
@@ -1470,15 +1470,9 @@ void sub_cluster_heart_beat_handler(int comm_source, int ack_tag, char *arg)
 	char *t_arg;
 	int sub_master_id;
 	int sub_cluster_id;
-	int i;
 
-	i = 0;
-	while(arg[i] != ';')
-	{
-		i++;
-	}
-
-	i++;
+	int i = 0;
+	while(arg[i++] != ';');
 
 	t_arg = strdup(arg + i);
 
@@ -1706,16 +1700,16 @@ void load_normal_sub_task_description_element(FILE *fp,struct normal_sub_task_de
 	int ret;
 
 	fscanf(fp,"********************\n");
-	fscanf(fp,"sub_task_path:%s\n",arg->prime_sub_task_description.sub_task_path);
-	fscanf(fp,"CPU_prefer:%d\n",&(arg->prime_sub_task_description.CPU_prefer));
-	fscanf(fp,"GPU_prefer:%d\n",&(arg->prime_sub_task_description.GPU_prefer));
-	fscanf(fp,"exe_time:%d\n",&(arg->prime_sub_task_description.exe_time));
-	fscanf(fp,"exe_density:%d\n",&(arg->prime_sub_task_description.exe_density));
-	fscanf(fp,"memory_demand:%d\n",&(arg->prime_sub_task_description.memory_demand));
-	fscanf(fp,"network_density:%d\n",&(arg->prime_sub_task_description.network_density));
-	fscanf(fp,"CPU_memory_network:%d,%d,%d\n",&(arg->prime_sub_task_description.weight[0]),&(arg->prime_sub_task_description.weight[1]),&(arg->prime_sub_task_description.weight[2]));
-	fscanf(fp,"arg_type:%d\n",&(arg->prime_sub_task_description.arg_type));
-	fscanf(fp,"arg:%s\n",arg->prime_sub_task_description.arg);
+	fscanf(fp, "sub_task_path:%s\n", arg->prime_sub_task_description.sub_task_path);
+	fscanf(fp, "CPU_prefer:%d\n", &(arg->prime_sub_task_description.CPU_prefer));
+	fscanf(fp, "GPU_prefer:%d\n", &(arg->prime_sub_task_description.GPU_prefer));
+	fscanf(fp, "exe_time:%d\n", &(arg->prime_sub_task_description.exe_time));
+	fscanf(fp, "exe_density:%d\n", &(arg->prime_sub_task_description.exe_density));
+	fscanf(fp, "memory_demand:%d\n", &(arg->prime_sub_task_description.memory_demand));
+	fscanf(fp, "network_density:%d\n", &(arg->prime_sub_task_description.network_density));
+	fscanf(fp, "CPU_memory_network:%d,%d,%d\n", &(arg->prime_sub_task_description.weight[0]),&(arg->prime_sub_task_description.weight[1]),&(arg->prime_sub_task_description.weight[2]));
+	fscanf(fp, "arg_type:%d\n", &(arg->prime_sub_task_description.arg_type));
+	fscanf(fp, "arg:%s\n", arg->prime_sub_task_description.arg);
 
 	fscanf(fp,"sub_pack_level:%d\n",&(arg->sub_pack_level));
 

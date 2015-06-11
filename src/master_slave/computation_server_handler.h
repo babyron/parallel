@@ -5,9 +5,12 @@
  *      Author: ron
  */
 
+#include "./structure/data.h"
 #ifndef SRC_MASTER_SLAVE_COMPUTATION_SERVER_HANDLER_H_
 #define SRC_MASTER_SLAVE_COMPUTATION_SERVER_HANDLER_H_
 
-void *local_msg_daemon(void *arg);
-void *computation_server_handler(void *arg);
+msg_t msg_type_computation(const char *msg);
+void o_mpi_sub_task_finish_handler(char *arg);
+void o_mpi_child_create_handler(char *arg);
+void o_mpi_child_wait_all_handler(char *arg);
 #endif /* SRC_MASTER_SLAVE_COMPUTATION_SERVER_HANDLER_H_ */

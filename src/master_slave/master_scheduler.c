@@ -300,7 +300,7 @@ static void assign_schedule_unit(void)
 	sub_cluster_rank_array_num = 0;
 }
 
-static void change_schedule_unit_status_to_running(int schedule_unit_index,int selected_sub_cluster_id)
+static void change_schedule_unit_status_to_running(int schedule_unit_index, int selected_sub_cluster_id)
 {
 	struct sub_pack_description_tree_element *parent_root;
 	struct job_description_element *t_running_job_list;
@@ -309,27 +309,27 @@ static void change_schedule_unit_status_to_running(int schedule_unit_index,int s
 	int i;
 
 	pthread_mutex_lock(&running_job_list_m_lock);
-	if(total_schedule_unit_array[schedule_unit_index].schedule_unit_type==0)
+	if(total_schedule_unit_array[schedule_unit_index].schedule_unit_type == 0)
 	{
 		t_running_job_list = running_job_list;
 		while(t_running_job_list != NULL)
 		{
-			if(t_running_job_list->job_id==total_schedule_unit_array[schedule_unit_index].job_id)
+			if(t_running_job_list->job_id == total_schedule_unit_array[schedule_unit_index].job_id)
 			{
-				t_running_job_list->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id-1].status = RUNNING;
-				t_running_job_list->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id-1].start_time = time(NULL);
-				t_running_job_list->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id-1].sub_cluster_id = selected_sub_cluster_id;
-				t_running_job_list->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id-1].priority = total_schedule_unit_array[schedule_unit_index].priority;
+				t_running_job_list->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id - 1].status = RUNNING;
+				t_running_job_list->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id - 1].start_time = time(NULL);
+				t_running_job_list->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id - 1].sub_cluster_id = selected_sub_cluster_id;
+				t_running_job_list->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id - 1].priority = total_schedule_unit_array[schedule_unit_index].priority;
 
-				if(t_running_job_list->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id-1].sub_pack_level>0)
+				if(t_running_job_list->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id - 1].sub_pack_level > 0)
 				{
-					init_tree_element(t_running_job_list,schedule_unit_index);
+					init_tree_element(t_running_job_list, schedule_unit_index);
 				}
 				break;
 			}
 			t_running_job_list = t_running_job_list->next;
 		}
-		if(t_running_job_list==NULL)
+		if(t_running_job_list == NULL)
 		{
 			printf("change_schedule_unit_status:cannot find job description!\n");
 			log_error("change_schedule_unit_status:cannot find job description!\n");
@@ -399,12 +399,12 @@ static struct sub_pack_description_tree_element *find_parent_root(int schedule_u
 	return ret;
 }
 
-static void init_tree_element(struct job_description_element *job,int schedule_unit_index)
+static void init_tree_element(struct job_description_element *job, int schedule_unit_index)
 {
 	struct sub_pack_description_tree_element *root;
 	int i;
 	//下面一行超出了整个屏幕，实在。。。好吧，只是一个空间申请
-	job->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id-1].root = (struct sub_pack_description_tree_element *)malloc(sizeof(struct sub_pack_description_tree_element));
+	job->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id-1].root = (sub_pack_description_tree_element *)malloc(sizeof(sub_pack_description_tree_element));
 	root = job->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id-1].root;
 
 	root->sub_pack_b_level = job->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id-1].sub_pack_level;
@@ -413,7 +413,7 @@ static void init_tree_element(struct job_description_element *job,int schedule_u
 
 	root->parallel_sub_task_description.prime_sub_task_description = job->job.normal_sub_task_description_array[total_schedule_unit_array[schedule_unit_index].top_id-1].prime_sub_task_description;
 	//上面部分依葫芦画瓢，造了一个和原来作业相同的root
-	for(i=0;i<10;i++)
+	for(i = 0; i < 10; i++)
 	{
 		root->parallel_sub_task_description.id[i] = 0;
 	}
@@ -476,18 +476,18 @@ static void fill_sub_cluster_description(struct sub_cluster_status_list_element 
 	t->sub_cluster_description.total_memory_total = 0;
 	t->sub_cluster_description.total_memory_swap = 0;
 
-	for(i=0;i<t->sub_machine_num;i++)
+	for(i = 0; i < t->sub_machine_num; i++)
 	{
-		machine_id = t->sub_machine_id_list[i];
+		machine_id = t->sub_machine_id_list[i] - 1;
 
-		t->sub_cluster_description.total_CPU_core_num += master_machine_array[machine_id-1].machine_description.CPU_core_num;
-		t->sub_cluster_description.total_GPU_core_num += master_machine_array[machine_id-1].machine_description.GPU_core_num;
-		t->sub_cluster_description.total_IO_bus_capacity += master_machine_array[machine_id-1].machine_description.IO_bus_capacity;
-		t->sub_cluster_description.total_network_capacity += master_machine_array[machine_id-1].machine_description.network_capacity;
-		t->sub_cluster_description.total_memory_swap += master_machine_array[machine_id-1].machine_description.memory_swap;
-		t->sub_cluster_description.average_CPU_free += master_machine_array[machine_id-1].machine_description.CPU_free;
-		t->sub_cluster_description.average_memory_free += master_machine_array[machine_id-1].machine_description.memory_free;
-		t->sub_cluster_description.average_network_free += master_machine_array[machine_id-1].machine_description.network_free;
+		t->sub_cluster_description.total_CPU_core_num += master_machine_array[machine_id].machine_description.CPU_core_num;
+		t->sub_cluster_description.total_GPU_core_num += master_machine_array[machine_id].machine_description.GPU_core_num;
+		t->sub_cluster_description.total_IO_bus_capacity += master_machine_array[machine_id].machine_description.IO_bus_capacity;
+		t->sub_cluster_description.total_network_capacity += master_machine_array[machine_id].machine_description.network_capacity;
+		t->sub_cluster_description.total_memory_swap += master_machine_array[machine_id].machine_description.memory_swap;
+		t->sub_cluster_description.average_CPU_free += master_machine_array[machine_id].machine_description.CPU_free;
+		t->sub_cluster_description.average_memory_free += master_machine_array[machine_id].machine_description.memory_free;
+		t->sub_cluster_description.average_network_free += master_machine_array[machine_id].machine_description.network_free;
 	}
 
 	t->sub_cluster_description.average_CPU_free /=t->sub_machine_num;
@@ -814,8 +814,7 @@ static int select_sub_cluster(int schedule_unit_index)
 	sub_cluster_rank_array_element t;
 	int weight_int[3];
 	float weight[3];
-	int ret;
-	int i,j;
+	int i, j;
 
 	weight_int[0] = total_schedule_unit_array[schedule_unit_index].prime_sub_task_description.weight[0];
 	weight_int[1] = total_schedule_unit_array[schedule_unit_index].prime_sub_task_description.weight[1];
@@ -833,7 +832,7 @@ static int select_sub_cluster(int schedule_unit_index)
 //		printf("CPU: %d,mem: %d,net: %d\n",sub_cluster_rank_array[i].pridict_status.average_CPU_free,sub_cluster_rank_array[i].pridict_status.average_memory_free,sub_cluster_rank_array[i].pridict_status.average_network_free);
 	}
 
-	//冒泡排序。。。 fucking bubble sort
+	//bubble sort
 	for(i = 0; i < sub_cluster_rank_array_num - 1; i++)
 	{
 		for(j = 0; j < sub_cluster_rank_array_num - 1 - 1 - i; j++)
@@ -847,7 +846,7 @@ static int select_sub_cluster(int schedule_unit_index)
 		}
 	}
 
-	ret = 0;
+	int ret = 0;
 
 	//选择一个sub_cluster来运行这个unit，是否根据机器的数量来判定？？
 	for(i = 0; i < sub_cluster_rank_array_num; i++)
@@ -872,6 +871,7 @@ static int select_sub_cluster(int schedule_unit_index)
 			break;
 		}
 	}
+
 	//在这里新建一个sub_cluster，在没有合适的sub_cluster的时候
 	if(ret == 0)
 	{
@@ -893,19 +893,19 @@ static int select_sub_cluster(int schedule_unit_index)
 				t_sub_cluster_list = t_sub_cluster_list->next;
 			}
 
-			assert(t_sub_cluster_list!=NULL);
+			assert(t_sub_cluster_list != NULL);
+			//what happened ?
+			sub_cluster_rank_array[sub_cluster_rank_array_num - 1].sub_cluster_id = t_sub_cluster_list->sub_cluster_id;
+			sub_cluster_rank_array[sub_cluster_rank_array_num - 1].sub_machine_num = t_sub_cluster_list->sub_machine_num;
+			sub_cluster_rank_array[sub_cluster_rank_array_num - 1].pridict_status = t_sub_cluster_list->sub_cluster_description;
+			sub_cluster_rank_array[sub_cluster_rank_array_num - 1].total_sub_task_num = total_schedule_unit_array[schedule_unit_index].schedule_unit_num;
 
-			sub_cluster_rank_array[sub_cluster_rank_array_num-1].sub_cluster_id = t_sub_cluster_list->sub_cluster_id;
-			sub_cluster_rank_array[sub_cluster_rank_array_num-1].sub_machine_num = t_sub_cluster_list->sub_machine_num;
-			sub_cluster_rank_array[sub_cluster_rank_array_num-1].pridict_status = t_sub_cluster_list->sub_cluster_description;
-			sub_cluster_rank_array[sub_cluster_rank_array_num-1].total_sub_task_num = total_schedule_unit_array[schedule_unit_index].schedule_unit_num;
-
-			for(i=0;i<2;i++)
+			for(i = 0; i < 2; i++)
 			{
-				sub_cluster_rank_array[sub_cluster_rank_array_num-1].priority_task_num[i] = 0;
+				sub_cluster_rank_array[sub_cluster_rank_array_num - 1].priority_task_num[i] = 0;
 			}
 
-			sub_cluster_rank_array[sub_cluster_rank_array_num-1].priority_task_num[total_schedule_unit_array[schedule_unit_index].priority-1] = total_schedule_unit_array[schedule_unit_index].schedule_unit_num;
+			sub_cluster_rank_array[sub_cluster_rank_array_num - 1].priority_task_num[total_schedule_unit_array[schedule_unit_index].priority - 1] = total_schedule_unit_array[schedule_unit_index].schedule_unit_num;
 		}
 		else
 		{
@@ -917,7 +917,7 @@ static int select_sub_cluster(int schedule_unit_index)
 	else
 	{
 		//在这里居然找到了正确的i，这个变量节省的跨度好大
-		if(ret!=0)
+		if(ret != 0)
 		{
 			sub_cluster_rank_array[i].pridict_status.average_CPU_free -= (float)total_schedule_unit_array[schedule_unit_index].prime_sub_task_description.exe_density/(float)sub_cluster_rank_array[i].sub_machine_num;
 			sub_cluster_rank_array[i].pridict_status.average_memory_free -= (float)total_schedule_unit_array[schedule_unit_index].prime_sub_task_description.memory_demand/(float)sub_cluster_rank_array[i].sub_machine_num;
@@ -931,29 +931,31 @@ static int select_sub_cluster(int schedule_unit_index)
 
 }
 
-static int try_to_create_sub_cluster(int need_machine_num,int schedule_unit_index)
+static int try_to_create_sub_cluster(int need_machine_num, int schedule_unit_index)
 {
+	//shouldn't check need_machine_num legality?
 	struct sub_cluster_status_list_element *t;
 	int *selected_machine_id_array;
 	int sub_master_id;
 	int selected_machine_num;
 	int i;
 
-	assert(need_machine_num>0);
+	assert(need_machine_num > 0);
 
-	selected_machine_id_array = (int *)malloc(need_machine_num*sizeof(int));
+	selected_machine_id_array = (int *)malloc(need_machine_num * sizeof(int));//TODO check malloc
 
 	selected_machine_num = 0;
 	//下面查看可用机器的个数
 	pthread_mutex_lock(&master_machine_array_m_lock);
 
-	for(i=0;i<master_machine_num-1;i++)
+	//Master should
+	for(i = 0; i < master_machine_num - 1; i++)
 	{
-		if(master_machine_array[i].machine_status==1)
+		if(master_machine_array[i].machine_status == 1)
 		{
-			selected_machine_id_array[selected_machine_num] = i+1;//好吧，这里machine_num也从1开始
+			selected_machine_id_array[selected_machine_num] = i + 1;//machine_num start from 1
 			selected_machine_num++;
-			if(selected_machine_num==need_machine_num)
+			if(selected_machine_num == need_machine_num)
 			{
 				break;
 			}
@@ -962,39 +964,42 @@ static int try_to_create_sub_cluster(int need_machine_num,int schedule_unit_inde
 
 	pthread_mutex_unlock(&master_machine_array_m_lock);
 
-	if(selected_machine_num==need_machine_num)//在满足需求的情况下
+	if(selected_machine_num == need_machine_num) //在满足需求的情况下
 	{
-		sub_master_id = selected_machine_id_array[0];//选取第一个作为sub_master
+		sub_master_id = selected_machine_id_array[0]; //选取第一个作为sub_master
 
 		pthread_mutex_lock(&master_machine_array_m_lock);
 
-		for(i=0;i<need_machine_num;i++)
+		for(i = 0; i < need_machine_num; i++)
 		{
-			master_machine_array[selected_machine_id_array[i]-1].sub_master_id = sub_master_id;//每个机器都找到自己的主节点
-			master_machine_array[selected_machine_id_array[i]-1].machine_status = 2;
+			master_machine_array[selected_machine_id_array[i] - 1].sub_master_id = sub_master_id; //每个机器都找到自己的主节点
+			master_machine_array[selected_machine_id_array[i] - 1].machine_status = 2;
 		}
 
 		pthread_mutex_unlock(&master_machine_array_m_lock);
 
-		t = (struct sub_cluster_status_list_element *)malloc(sizeof(struct sub_cluster_status_list_element));
+		t = (sub_cluster_status_list_element *)malloc(sizeof(sub_cluster_status_list_element));
 
-		t_sub_cluster_id = (t_sub_cluster_id+1)%65536;
+		t_sub_cluster_id = (t_sub_cluster_id + 1) % 65536;
 
 		t->sub_cluster_id = t_sub_cluster_id;
 		t->sub_master_id = sub_master_id;
 		t->sub_machine_num = need_machine_num;
-		t->sub_machine_id_list = (int *)malloc(need_machine_num*sizeof(int));
+		t->sub_machine_id_list = selected_machine_id_array;
+		/*
+		t->sub_machine_id_list = (int *)malloc(need_machine_num * sizeof(int));
 
-		for(i=0;i<need_machine_num;i++)
+		for(i = 0; i < need_machine_num; i++)
 		{
-			t->sub_machine_id_list[i] = selected_machine_id_array[i];
+			t->sub_machine_id_list[i] = selected_machine_id_array[i]; //why not assign selected_machine_id_array to t->sub_machine_id_list
 		}
+		*/
 
 		t->schedule_unit_count = 0;
 
 		t->schedule_unit_priority_list = NULL;
 
-		fill_sub_cluster_description(t);//填充其余的描述信息
+		fill_sub_cluster_description(t); //填充其余的描述信息
 
 		pthread_mutex_lock(&sub_cluster_list_m_lock);
 
@@ -1003,14 +1008,14 @@ static int try_to_create_sub_cluster(int need_machine_num,int schedule_unit_inde
 
 		pthread_mutex_unlock(&sub_cluster_list_m_lock);
 
-		API_sub_scheduler_assign(t);//发送SUB_SCHEDULER_ASSIGN信号
+		API_sub_scheduler_assign(t); //send SUB_SCHEDULER_ASSIGN operation code to sub_master
 
-		for(i=0;i<need_machine_num;i++)
+		for(i = 0; i < need_machine_num; i++)
 		{
-			API_computation_node_assign(selected_machine_id_array[i]);//发送COMPUTATION_NODE_ASSIGN信号
+			API_computation_node_assign(selected_machine_id_array[i]); //send COMPUTATION_NODE_ASSIGN code to scheduler machine
 		}
 
-		free(selected_machine_id_array);
+		//free(selected_machine_id_array);
 		return t->sub_cluster_id;
 	}
 	else
@@ -1026,10 +1031,7 @@ static int try_to_create_sub_cluster(int need_machine_num,int schedule_unit_inde
  */
 void *master_scheduler(void *arg)
 {
-	int i;
-	/**
-	 * 初始化调度
-	 */
+
 	master_scheduler_init();
 	while(1)
 	{

@@ -28,7 +28,7 @@ static void copy_int_to_msg(char *msg, char *t_msg, int num, char *append){
 	strcat(msg, append);
 }
 
-void fill_schedule_unit_assign_msg(struct schedule_unit_description_element schedule_unit,char *send_msg,int num,char *priority_modified_msg)
+void fill_schedule_unit_assign_msg(struct schedule_unit_description_element schedule_unit, char *send_msg, int num, char *priority_modified_msg)
 {
 	char t_msg[6] = {0};
 	int i, j;
@@ -45,13 +45,13 @@ void fill_schedule_unit_assign_msg(struct schedule_unit_description_element sche
 	}
 	else
 	{
-		printf("fill_schedule_unit_assign:schedule_unit_type error:%d (0,1)\n",schedule_unit.schedule_unit_type);
+		printf("fill_schedule_unit_assign:schedule_unit_type error:%d (0,1)\n", schedule_unit.schedule_unit_type);
 		log_error("fill_schedule_unit_assign:schedule_unit_type error\n");
 		exit(1);
 	}
 
-	strcat(send_msg,schedule_unit.prime_sub_task_description.sub_task_path);
-	strcat(send_msg,",");
+	strcat(send_msg, schedule_unit.prime_sub_task_description.sub_task_path);
+	strcat(send_msg, ",");
 
 	//t_msg = (char *)malloc(6);
 	copy_int_to_msg(send_msg, t_msg, schedule_unit.prime_sub_task_description.CPU_prefer, append);
@@ -73,7 +73,7 @@ void fill_schedule_unit_assign_msg(struct schedule_unit_description_element sche
 	copy_int_to_msg(send_msg, t_msg, schedule_unit.top_id, append);
 	copy_int_to_msg(send_msg, t_msg, schedule_unit.priority, append);
 
-	if(schedule_unit.schedule_unit_type==1)
+	if(schedule_unit.schedule_unit_type == 1)
 	{
 		for(i = 0; i < schedule_unit.schedule_unit_num; i++)
 		{
@@ -82,14 +82,7 @@ void fill_schedule_unit_assign_msg(struct schedule_unit_description_element sche
 				copy_int_to_msg(send_msg, t_msg, schedule_unit.ids[i][j], append);
 			}
 		}
-	}
-	else
-	{
-//		strcat(send_msg,"NULL_");
-	}
 
-	if(schedule_unit.schedule_unit_type == 1)
-	{
 		for(i = 0; i < schedule_unit.schedule_unit_num; i++)
 		{
 			strcat(send_msg, schedule_unit.args[i]);
@@ -98,9 +91,10 @@ void fill_schedule_unit_assign_msg(struct schedule_unit_description_element sche
 	}
 	else
 	{
+//		strcat(send_msg,"NULL_");
 	}
-
 	copy_int_to_msg(send_msg, t_msg, num, append);
+
 	strcat(send_msg, priority_modified_msg);
 }
 
@@ -338,7 +332,7 @@ void check_modified_priority(struct sub_cluster_status_list_element *list,int *n
 	pthread_mutex_unlock(&sub_cluster_list_m_lock);
 }
 
-void check_modified_priority_without_lock(struct sub_cluster_status_list_element *list,int *num,char **ret_char)
+void check_modified_priority_without_lock(struct sub_cluster_status_list_element *list, int *num, char **ret_char)
 {
 	struct schedule_unit_priority_list_element *t;
 	int new_priority;
@@ -347,26 +341,26 @@ void check_modified_priority_without_lock(struct sub_cluster_status_list_element
 
 	(*num) = 0;
 
-	*ret_char = (char *)malloc(1*sizeof(char));
-	strcpy(*ret_char,"");
+	*ret_char = (char *)malloc(1);
+	strcpy(*ret_char, "");
 
 	t = list->schedule_unit_priority_list;
 
-	while(t!=NULL)
+	while(t != NULL)
 	{
-		new_priority = master_get_sub_task_priority(t->schedule_unit_type,t->job_id,t->top_id,t->parent_id);
-		if(t->priority!=new_priority)
+		new_priority = master_get_sub_task_priority(t->schedule_unit_type, t->job_id, t->top_id, t->parent_id);
+		if(t->priority != new_priority)
 		{
-			fill_modified_priority_msg(t,new_priority,tt);
+			fill_modified_priority_msg(t, new_priority, tt);
 			old_len = strlen(*ret_char);
-			*ret_char = (char *)realloc(*ret_char,(old_len+strlen(tt)+1)*sizeof(char));
-			if(strlen(tt)>34)
+			*ret_char = (char *)realloc(*ret_char, (old_len + strlen(tt) + 1));
+			if(strlen(tt) > 34)
 			{
-				printf(" tt  too  long !!!!!!!!%ld\n",strlen(tt));
+				printf(" tt  too  long !!!!!!!!%ld\n", strlen(tt));
 				log_error("tt too long !!!!!!!!\n");
 				exit(1);
 			}
-			strcat(*ret_char,tt);
+			strcat(*ret_char, tt);
 			t->priority = new_priority;
 			(*num)++;
 		}
@@ -416,18 +410,17 @@ void fill_modified_priority_msg(struct schedule_unit_priority_list_element *t, i
 	}
 }
 
-int master_get_sub_task_priority(int type,int job_id,int top_id,int *parent_id)
+int master_get_sub_task_priority(int type, int job_id, int top_id, int *parent_id)
 {
-	struct job_description_element *t_running_job_list,*t_finished_job_list;
+	struct job_description_element *t_running_job_list, *t_finished_job_list;
 	int ret;
-
 
 	pthread_mutex_lock(&running_job_list_m_lock);
 
 	t_running_job_list = running_job_list;
-	while(t_running_job_list!=NULL)
+	while(t_running_job_list != NULL)
 	{
-		if(t_running_job_list->job_id==job_id)
+		if(t_running_job_list->job_id == job_id)
 		{
 			break;
 		}
@@ -435,41 +428,43 @@ int master_get_sub_task_priority(int type,int job_id,int top_id,int *parent_id)
 		t_running_job_list = t_running_job_list->next;
 	}
 
-	if(t_running_job_list==NULL)
+	// if t_running_job_list is NULL, print running job list and finished job list
+	// TODO DEBUG?
+	if(t_running_job_list == NULL)
 	{
-		printf("want to find %d\n",job_id);
+		printf("want to find %d\n", job_id);
 		t_running_job_list = running_job_list;
-		while(t_running_job_list!=NULL)
+		while(t_running_job_list != NULL)
 		{
-			printf(" running job list : %ld\n",t_running_job_list->job_id);
+			printf(" running job list : %ld\n" , t_running_job_list->job_id);
 
 			t_running_job_list = t_running_job_list->next;
 		}
 
 		t_finished_job_list = finished_job_list;
-		while(t_finished_job_list!=NULL)
+		while(t_finished_job_list != NULL)
 		{
-			printf("finished list : %ld\n",t_finished_job_list->job_id);
+			printf("finished list : %ld\n", t_finished_job_list->job_id);
 
 			t_finished_job_list = t_finished_job_list->next;
 		}
 
 	}
 
-	assert(t_running_job_list!=NULL);
+	assert(t_running_job_list != NULL);
 
 	pthread_mutex_unlock(&running_job_list_m_lock);
 
-	if(type==0)
+	if(type == 0)
 	{
-		ret = t_running_job_list->job.normal_sub_task_description_array[top_id-1].priority;
+		ret = t_running_job_list->job.normal_sub_task_description_array[top_id - 1].priority;
 	}
 	else
 	{
-		ret = t_running_job_list->job.normal_sub_task_description_array[parent_id[0]-1].priority;
+		ret = t_running_job_list->job.normal_sub_task_description_array[parent_id[0] - 1].priority;
 	}
 
-	assert(ret!=0);
+	assert(ret != 0);
 
 	return ret;
 }
@@ -481,9 +476,9 @@ struct sub_cluster_status_list_element *get_sub_cluster_element_without_lock(int
 	ret = NULL;
 
 	t_sub_cluster_list = sub_cluster_list;
-	while(t_sub_cluster_list!=NULL)
+	while(t_sub_cluster_list != NULL)
 	{
-		if(t_sub_cluster_list->sub_cluster_id==sub_cluster_id)
+		if(t_sub_cluster_list->sub_cluster_id == sub_cluster_id)
 		{
 			ret = t_sub_cluster_list;
 			break;
@@ -492,12 +487,12 @@ struct sub_cluster_status_list_element *get_sub_cluster_element_without_lock(int
 		t_sub_cluster_list = t_sub_cluster_list->next;
 	}
 
-	if(ret==NULL)
+	if(ret == NULL)
 	{
 		log_error("get_sub_cluster_element_without_lock NULL error\n");
 		exit(1);
 	}
-	assert(ret!=NULL);
+	assert(ret != NULL);
 
 	return ret;
 }
@@ -553,8 +548,9 @@ void API_sub_scheduler_assign(struct sub_cluster_status_list_element *t)
 		copy_int_to_msg(send_msg, t_arg, t->sub_machine_id_list[i], append);
 	}
 
-	send_recv_msg(t->sub_master_id,2,SUB_SCHEDULER_ASSIGN,send_msg,&ret_msg);
+	send_recv_msg(t->sub_master_id, 2, SUB_SCHEDULER_ASSIGN, send_msg, &ret_msg);
 
+	//Has ret_msg used ?
 	free(ret_msg);
 	free(send_msg);
 }
@@ -590,13 +586,13 @@ int API_registration_m(struct machine_description_element local_machine_status)
 	strcat(msg, t_msg);
 	//printf("MSG =====swap = %d %s\n",  local_machine_status.memory_swap, t_msg);
 	send_recv_msg(0, 0, REGISTRATION_M, msg, &ret_msg);
-
+	printf("free(ret_msg)");
 	free(ret_msg);
 
 	return 1;
 }
 
-int API_schedule_unit_assign(struct schedule_unit_description_element schedule_unit,int sub_cluster_id)
+int API_schedule_unit_assign(struct schedule_unit_description_element schedule_unit, int sub_cluster_id)
 {
 	struct sub_cluster_status_list_element *t;
 	struct schedule_unit_priority_list_element *tt;
@@ -605,31 +601,26 @@ int API_schedule_unit_assign(struct schedule_unit_description_element schedule_u
 	char *priority_modified_msg;
 	char sub_master_ip[16];
 	int num;
-	int i,j;
+	int i, j;
 
 
 	pthread_mutex_lock(&sub_cluster_list_m_lock);
-
 	t = get_sub_cluster_element_without_lock(sub_cluster_id);
-
 //	check_modified_priority(t,&num,&priority_modified_msg);
-	check_modified_priority_without_lock(t,&num,&priority_modified_msg);
-
-
-	t->schedule_unit_count++;//该集群中运行的任务数加1
-
+	check_modified_priority_without_lock(t, &num, &priority_modified_msg);
+	t->schedule_unit_count++; //该集群中运行的任务数加1
 	pthread_mutex_unlock(&sub_cluster_list_m_lock);
 
-	tt = (struct schedule_unit_priority_list_element *)malloc(sizeof(struct schedule_unit_priority_list_element));
+	tt = (schedule_unit_priority_list_element *)malloc(sizeof(schedule_unit_priority_list_element));
 
 	tt->schedule_unit_type = schedule_unit.schedule_unit_type;
 	tt->priority = schedule_unit.priority;
-	if(schedule_unit.schedule_unit_type==0)
+	if(schedule_unit.schedule_unit_type == 0)
 	{
 		tt->job_id = schedule_unit.job_id;
 		tt->top_id = schedule_unit.top_id;
 		tt->schedule_unit_num = 1;
-		for(i=0;i<10;i++)
+		for(i = 0; i < 10; i++)
 		{
 			tt->parent_id[i] = 0;
 		}
@@ -639,38 +630,37 @@ int API_schedule_unit_assign(struct schedule_unit_description_element schedule_u
 		tt->job_id = schedule_unit.job_id;
 		tt->top_id = 0;
 		tt->schedule_unit_num = schedule_unit.schedule_unit_num;
-		for(i=0;i<10;i++)
+		for(i = 0; i < 10; i++)
 		{
 			tt->parent_id[i] = 0;
 		}
 
-		for(i=0;i<10;i++)
+		for(i = 0; i < 10; i++)
 		{
 			tt->parent_id[i] = schedule_unit.ids[0][i];
-			if(schedule_unit.ids[0][i]==0)
+			if(schedule_unit.ids[0][i] == 0)
 			{
-				tt->parent_id[i-1] = 0;//一个任务包，只有自己的id号是不同的，其余都相同
+				tt->parent_id[i - 1] = 0;//一个任务包，只有自己的id号是不同的，其余都相同
 				break;
 			}
 		}
 	}
 
 	pthread_mutex_lock(&sub_cluster_list_m_lock);
-
+	//insert from head
 	tt->next = t->schedule_unit_priority_list;
 	t->schedule_unit_priority_list = tt;
 
 	pthread_mutex_unlock(&sub_cluster_list_m_lock);
 
-	send_msg = (char *)malloc((132+60+6+schedule_unit.schedule_unit_num*(84)+num*34)*sizeof(char));
-	fill_schedule_unit_assign_msg(schedule_unit,send_msg,num,priority_modified_msg);
+	send_msg = (char *)malloc(132 + 60 + 6 + schedule_unit.schedule_unit_num * (84) + num * 34);
+	fill_schedule_unit_assign_msg(schedule_unit, send_msg, num, priority_modified_msg);
 
-	send_recv_msg(t->sub_master_id,1,SCHEDULE_UNIT_ASSIGN,send_msg,&ret_msg);
+	send_recv_msg(t->sub_master_id, 1, SCHEDULE_UNIT_ASSIGN, send_msg, &ret_msg);
 
 	free(send_msg);
 	free(ret_msg);
 	free(priority_modified_msg);
-
 	return 1;
 }
 
@@ -746,14 +736,11 @@ int API_registration_s(int sub_master_id, struct machine_description_element loc
 
 int API_sub_task_finish_c_to_s(char *arg)
 {
-	char *send_msg;
 	char *ret_msg;
 
-	send_msg = strdup(arg);
-	printf("api_sub task finish c to s sub master comm id = %d\n",sub_master_comm_id);
-	send_recv_msg(sub_master_comm_id,1,SUB_TASK_FINISH,arg,&ret_msg);
+	printf("api_sub task finish c to s sub master comm id = %d\n", sub_master_comm_id);
+	send_recv_msg(sub_master_comm_id, 1, SUB_TASK_FINISH, arg, &ret_msg);
 	free(ret_msg);
-	free(send_msg);
 
 	return 1;
 }
